@@ -7,4 +7,5 @@
   <setting id="hide_info" type="bool" label="32003" default="false" />
   <setting id="hide_watched" type="bool" label="32004" default="false" />
   <setting id="watched_days" type="number" enable="!eq(-1,false)" label="32005" default="365" />
+  <setting id="do_fullscreen" type="bool" label="32007" default="false" />
 </settings>
