@@ -19,6 +19,8 @@ import xbmcaddon
 import MyFont
 addon = xbmcaddon.Addon()
 number_trailers =  addon.getSetting('number_trailers')
+do_password = addon.getSetting('do_password')
+password = addon.getSetting('password')
 do_curtains = addon.getSetting('do_animation')
 do_genre = addon.getSetting('do_genre')
 do_mute = addon.getSetting('do_mute')
@@ -261,7 +263,30 @@ class infoWindow(xbmcgui.WindowXMLDialog):
 class blankscreen(xbmcgui.Window):
 	def __init__(self,):
 		pass
-		
+
+class passwordscreen(xbmcgui.WindowXMLDialog):
+	def onInit(self):
+		pass
+
+	def onAction(self, action):
+	# Read Password via a keyboard
+		pwd_success = False
+		while not pwd_success:
+			keyboard = xbmc.Keyboard("", heading = "Please type your password", hidden = True)
+			keyboard.setHeading('Password') # optional
+			keyboard.setHiddenInput(True) # optional
+			keyboard.doModal()
+			if (keyboard.isConfirmed()):
+				inputText = keyboard.getText()
+				if inputText == password:
+					pwd_success=True
+				else:
+					dialog = xbmcgui.Dialog()
+					dialog.ok("Error", "Invalid Password, try again")
+			keyboard.setHiddenInput(False) # optional
+			del keyboard
+		self.close()
+	
 class XBMCPlayer(xbmc.Player):
 	def __init__( self, *args, **kwargs ):
 		pass
@@ -318,9 +343,9 @@ def playTrailers():
 			xbmc.executebuiltin('xbmc.Mute()')
 	if not movie_file == '':
 		xbmc.Player(0).play(movie_file)
-	movie_file = ''
 	del bs
-		
+
+	
 filtergenre = False
 if do_genre == 'true':
 	filtergenre = askGenres()
@@ -335,3 +360,8 @@ else:
 	trailers = getTrailers("")
 
 playTrailers()
+
+if do_password == 'true':
+	pwscreen = passwordscreen('script-trailerwindow.xml', addon_path,'default',)
+	pwscreen.doModal()
+	del pwscreen
