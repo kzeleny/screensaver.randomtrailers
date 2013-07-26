@@ -1,3 +1,7 @@
+v.1.0.9 (july 26, 2013) :
+ - will now not prompt for password when running as program
+ - localized strings for dialogs
+ 
 v1.0.8 (July 25, 2013) :
  - added option to force full screen
  - added option to to password protect screensaver
