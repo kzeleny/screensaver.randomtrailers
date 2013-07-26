@@ -1,7 +1,7 @@
 # Random trailer player
 #
 # Author - kzeleny
-# Version - 1.0.6
+# Version - 1.0.9
 # Compatibility - Frodo
 #
 
@@ -37,6 +37,8 @@ exit_requested = False
 movie_file = ''
 if len(sys.argv) == 2:
 	do_genre ='false'
+else:
+	do_password='false'
 
 # Emulate Confluence fonts
 MyFont.addFont( "addon_font12" , "arial.ttf" , "15")
@@ -47,15 +49,16 @@ MyFont.addFont( "addon_font35_title" , "arial.ttf" , "33" , style = "bold")
 trailer=''
 do_timeout = False
 def askGenres():
-  # default is to select from all movies
-  selectGenre = False
-  # ask user whether they want to select a genre
-  a = xbmcgui.Dialog().yesno("Select genre", "Do you want to select a genre to watch?")
-  # deal with the output
-  if a == 1: 
-    # set filter
-    selectGenre = True
-  return selectGenre  
+	addon = xbmcaddon.Addon()
+	# default is to select from all movies
+	selectGenre = False
+	# ask user whether they want to select a genre
+	a = xbmcgui.Dialog().yesno(addon.getLocalizedString(32100), addon.getLocalizedString(32101))
+	# deal with the output
+	if a == 1: 
+	# set filter
+		selectGenre = True
+	return selectGenre  
   
 def selectGenre():
   success = False
@@ -75,7 +78,7 @@ def selectGenre():
   # sort the list alphabeticallt        
   mySortedGenres = sorted(myGenres)
   # prompt user to select genre
-  selectGenre = xbmcgui.Dialog().select("Select genre:", mySortedGenres)
+  selectGenre = xbmcgui.Dialog().select(addon.getLocalizedString(32100), mySortedGenres)
   # check whether user cancelled selection
   if not selectGenre == -1:
     # get the user's chosen genre
@@ -264,28 +267,34 @@ class blankscreen(xbmcgui.Window):
 	def __init__(self,):
 		pass
 
-class passwordscreen(xbmcgui.WindowXMLDialog):
-	def onInit(self):
+class passwordscreen(xbmcgui.Window):
+	def onInit(self,):
 		pass
 
 	def onAction(self, action):
 	# Read Password via a keyboard
 		pwd_success = False
 		while not pwd_success:
-			keyboard = xbmc.Keyboard("", heading = "Please type your password", hidden = True)
-			keyboard.setHeading('Password') # optional
-			keyboard.setHiddenInput(True) # optional
-			keyboard.doModal()
+			keyboard = xbmc.Keyboard("", heading = addon.getLocalizedString(32103), hidden = True)
+			keyboard.setHeading(addon.getLocalizedString(32103))
+			keyboard.setHiddenInput(True) 
+			keyboard.doModal(60000)
 			if (keyboard.isConfirmed()):
 				inputText = keyboard.getText()
 				if inputText == password:
 					pwd_success=True
 				else:
-					dialog = xbmcgui.Dialog()
-					dialog.ok("Error", "Invalid Password, try again")
+					del keyboard
+					dp = xbmcgui.DialogProgress()
+					dp.create(addon.getLocalizedString(32105),addon.getLocalizedString(32104))
+					dp.update(0)
+					xbmc.sleep(10000)
+					db.close()
+					break
 			keyboard.setHiddenInput(False) # optional
 			del keyboard
-		self.close()
+		if pwd_success:
+			self.close()
 	
 class XBMCPlayer(xbmc.Player):
 	def __init__( self, *args, **kwargs ):
@@ -362,6 +371,6 @@ else:
 playTrailers()
 
 if do_password == 'true':
-	pwscreen = passwordscreen('script-trailerwindow.xml', addon_path,'default',)
+	pwscreen = passwordscreen()
 	pwscreen.doModal()
 	del pwscreen
