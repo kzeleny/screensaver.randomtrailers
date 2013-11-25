@@ -9,12 +9,7 @@
 	<string id="32005">Number of Days to Hide Trailers</string>
 	<string id="32006">Mute Trailers During Playback</string>
 	<string id="32007">Force Full Screen</string>
-	<string id="32008">Password Protected</string>
-	<string id="32009">Password</string>
+	<string id="32008">Hide Movie Title</string>
 	<string id="32100">Select Genre</string>
 	<string id="32101">Do you want to select a genre to watch?</string>
-	<string id="32102">Password</string>
-	<string id="32103">Please type your password</string>
-	<string id="32104">Invalid Password, Try Again</string>
-	<string id="32105">Password Error</string>
 </strings>
