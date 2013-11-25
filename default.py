@@ -25,6 +25,7 @@ do_curtains = 'false'
 do_genre = addon.getSetting('do_genre')
 do_mute = addon.getSetting('do_mute')
 hide_info = addon.getSetting('hide_info')
+hide_title = addon.getSetting('hide_title')
 addon_path = addon.getAddonInfo('path')
 hide_watched = addon.getSetting('hide_watched')
 watched_days = addon.getSetting('watched_days')
@@ -126,7 +127,10 @@ class movieWindow(xbmcgui.WindowXMLDialog):
 			else:
 				xbmc.Player().play(trailer["trailer"])
 			self.getControl(30011).setLabel(trailer["title"] + ' - ' + str(trailer["year"]))
-			self.getControl(30011).setVisible(True)
+			if hide_title == 'false':
+				self.getControl(30011).setVisible(True)
+			else:
+				self.getControl(30011).setVisible(False)
 			while xbmc.Player().isPlaying():				
 				xbmc.sleep(250)
 		self.close()
@@ -165,7 +169,10 @@ class movieWindow(xbmcgui.WindowXMLDialog):
 			self.getControl(30011).setVisible(False)
 			w=infoWindow('script-DialogVideoInfo.xml',addon_path,'default')
 			w.doModal()
-			self.getControl(30011).setVisible(True)
+			if hide_title == 'false':
+				self.getControl(30011).setVisible(True)
+			else:
+				self.getControl(30011).setVisible(False)
 			
 class infoWindow(xbmcgui.WindowXMLDialog):
 
