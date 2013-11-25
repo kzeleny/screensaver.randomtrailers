@@ -19,8 +19,6 @@ import xbmcaddon
 import MyFont
 addon = xbmcaddon.Addon()
 number_trailers =  addon.getSetting('number_trailers')
-do_password = addon.getSetting('do_password')
-password = addon.getSetting('password')
 do_curtains = 'false'
 do_genre = addon.getSetting('do_genre')
 do_mute = addon.getSetting('do_mute')
@@ -273,35 +271,6 @@ class infoWindow(xbmcgui.WindowXMLDialog):
 class blankscreen(xbmcgui.Window):
 	def __init__(self,):
 		pass
-
-class passwordscreen(xbmcgui.Window):
-	def onInit(self,):
-		pass
-
-	def onAction(self, action):
-	# Read Password via a keyboard
-		pwd_success = False
-		while not pwd_success:
-			keyboard = xbmc.Keyboard("", heading = addon.getLocalizedString(32103), hidden = True)
-			keyboard.setHeading(addon.getLocalizedString(32103))
-			keyboard.setHiddenInput(True) 
-			keyboard.doModal(60000)
-			if (keyboard.isConfirmed()):
-				inputText = keyboard.getText()
-				if inputText == password:
-					pwd_success=True
-				else:
-					del keyboard
-					dp = xbmcgui.DialogProgress()
-					dp.create(addon.getLocalizedString(32105),addon.getLocalizedString(32104))
-					dp.update(0)
-					xbmc.sleep(10000)
-					db.close()
-					break
-			keyboard.setHiddenInput(False) # optional
-			del keyboard
-		if pwd_success:
-			self.close()
 	
 class XBMCPlayer(xbmc.Player):
 	def __init__( self, *args, **kwargs ):
@@ -377,7 +346,3 @@ else:
 
 playTrailers()
 
-if do_password == 'true':
-	pwscreen = passwordscreen()
-	pwscreen.doModal()
-	del pwscreen
