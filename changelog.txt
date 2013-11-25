@@ -1,6 +1,6 @@
-
 v.1.0.11 (November 25, 2013)
  - added option to hide movie title when playing
+ - removed malfunctioning password options
  
 v.1.0.9 (july 26, 2013) :
  - localized strings for dialogs
