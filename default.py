@@ -143,6 +143,7 @@ class movieWindow(xbmcgui.WindowXMLDialog):
 		ACTION_UP = 3
 		ACTION_DOWN = 4
 		ACTION_TAB = 18
+		ACTION_M = 122
 		
 		xbmc.log('action  =' + str(action.getId()))
 		
@@ -152,7 +153,12 @@ class movieWindow(xbmcgui.WindowXMLDialog):
 			xbmc.Player().stop()
 			exit_requested = True
 			self.close()
-
+			
+		if action == ACTION_M:
+			self.getControl(30011).setVisible(True)
+			xbmc.sleep(2000)
+			self.getControl(30011).setVisible(False)
+			
 		if action == ACTION_RIGHT or action == ACTION_TAB:
 			xbmc.Player().stop()
 			
