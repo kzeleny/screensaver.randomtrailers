@@ -98,6 +98,10 @@ def getTrailers(genre):
 	trailers = json.loads(trailerstring)	
 	return trailers
 
+class blankWindow(xbmcgui.WindowXML):
+	def onInit(self):
+		pass
+		
 class movieWindow(xbmcgui.WindowXMLDialog):
 
 	def onInit(self):
@@ -455,7 +459,8 @@ if success:
 else:
 	trailers = getTrailers("")
 
-bs = xbmcgui.Dialog()
+bs=blankWindow = blankWindow('script-BlankWindow.xml', addon_path,'default',)
+bs.show()
 
 if do_path == 'false':
 	playTrailers()
