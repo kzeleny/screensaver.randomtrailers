@@ -1,7 +1,6 @@
 v.1.1.0 (November 26, 2013)
+ - updates for gothum compatibility
  - added ability to play trailers from a folder rather than the users library
- 
-v.1.0.13 (November 26, 2013)
  - fixed issue where number of trailers incorrect if hide watched movies selected.
  
 v.1.0.12 (November 25, 2013)
