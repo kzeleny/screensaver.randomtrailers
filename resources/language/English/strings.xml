@@ -10,6 +10,8 @@
 	<string id="32006">Mute Trailers During Playback</string>
 	<string id="32007">Force Full Screen</string>
 	<string id="32008">Hide Movie Title</string>
+	<string id="32009">Play Trailers from Folder</string>
+	<string id="32010">Path to Trailers</string>
 	<string id="32100">Select Genre</string>
 	<string id="32101">Do you want to select a genre to watch?</string>
 </strings>
