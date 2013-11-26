@@ -1,11 +1,12 @@
 # Random trailer player
 #
 # Author - kzeleny
-# Version - 1.0.13
-# Compatibility - Frodo
+# Version - 1.1.0
+# Compatibility - Frodo/Gothum
 #
 
 import xbmc
+import xbmcvfs
 import xbmcgui
 from urllib import quote_plus, unquote_plus
 import re
@@ -24,6 +25,8 @@ do_genre = addon.getSetting('do_genre')
 do_mute = addon.getSetting('do_mute')
 hide_info = addon.getSetting('hide_info')
 hide_title = addon.getSetting('hide_title')
+trailers_path = addon.getSetting('path')
+do_path = addon.getSetting('do_path')
 addon_path = addon.getAddonInfo('path')
 hide_watched = addon.getSetting('hide_watched')
 watched_days = addon.getSetting('watched_days')
@@ -181,6 +184,47 @@ class movieWindow(xbmcgui.WindowXMLDialog):
 			else:
 				self.getControl(30011).setVisible(False)
 			
+class trailerWindow(xbmcgui.WindowXMLDialog):
+
+	def onInit(self):
+		global NUMBER_TRAILERS
+		trailers=walk(trailers_path)
+		trailer=random.choice(trailers)
+		xbmc.log(str(trailer))
+		NUMBER_TRAILERS = NUMBER_TRAILERS -1
+		xbmc.Player().play(trailer)
+		NUMBER_TRAILERS = NUMBER_TRAILERS -1
+		self.getControl(30011).setVisible(False)
+		while xbmc.Player().isPlaying():				
+			xbmc.sleep(250)
+		self.close()
+		
+	def onAction(self, action):
+		ACTION_PREVIOUS_MENU = 10
+		ACTION_BACK = 92
+		ACTION_ENTER = 7
+		ACTION_I = 11
+		ACTION_LEFT = 1
+		ACTION_RIGHT = 2
+		ACTION_UP = 3
+		ACTION_DOWN = 4
+		ACTION_TAB = 18
+		ACTION_M = 122
+		
+		global exit_requested
+		if action == ACTION_PREVIOUS_MENU or action == ACTION_LEFT or action == ACTION_BACK:
+			xbmc.Player().stop()
+			exit_requested = True
+			self.close()
+
+		if action == ACTION_RIGHT or action == ACTION_TAB:
+			xbmc.Player().stop()
+					
+		if action == ACTION_M:
+			self.getControl(30011).setVisible(True)
+			xbmc.sleep(2000)
+			self.getControl(30011).setVisible(False)
+			
 class infoWindow(xbmcgui.WindowXMLDialog):
 
 	def onInit(self):
@@ -277,9 +321,6 @@ class infoWindow(xbmcgui.WindowXMLDialog):
 			exit_requested=True
 			self.close()
 		
-class blankscreen(xbmcgui.Window):
-	def __init__(self,):
-		pass
 	
 class XBMCPlayer(xbmc.Player):
 	def __init__( self, *args, **kwargs ):
@@ -292,8 +333,6 @@ class XBMCPlayer(xbmc.Player):
 		pass
 		
 def playTrailers():
-	bs=blankscreen()
-	bs.show()
 	global exit_requested
 	global movie_file
 	global NUMBER_TRAILERS
@@ -339,8 +378,70 @@ def playTrailers():
 			xbmc.executebuiltin('xbmc.Mute()')
 	if not movie_file == '':
 		xbmc.Player(0).play(movie_file)
-	del bs
 
+def playPath():
+	global exit_requested
+	global NUMBER_TRAILERS
+	exit_requested = False
+	player = XBMCPlayer()
+	DO_CURTIANS = addon.getSetting('do_animation')
+	DO_EXIT = addon.getSetting('do_exit')
+	NUMBER_TRAILERS =  int(addon.getSetting('number_trailers'))
+	if do_mute == 'true':
+		muted = xbmc.getCondVisibility("Player.Muted")
+		if not muted:
+			xbmc.executebuiltin('xbmc.Mute()')
+	if DO_CURTIANS == 'true':
+		player.play(open_curtain_path)
+		while player.isPlaying():
+			xbmc.sleep(250)
+	trailercount = 0
+	while not exit_requested:
+		if NUMBER_TRAILERS == 0:
+			while not exit_requested and not xbmc.abortRequested:
+				myMovieWindow = trailerWindow('script-trailerwindow.xml', addon_path,'default',)
+				myMovieWindow.doModal()
+				del myMovieWindow
+		else:
+			NUMBER_TRAILERS = NUMBER_TRAILERS + 1
+			while NUMBER_TRAILERS > 0:
+				myMovieWindow = trailerWindow('script-trailerwindow.xml', addon_path,'default',)
+				myMovieWindow.doModal()
+				del myMovieWindow
+				if exit_requested:
+					break
+		if not exit_requested:
+			if DO_CURTIANS == 'true':
+				player.play(close_curtain_path)
+				while player.isPlaying():
+					xbmc.sleep(250)
+		exit_requested=True
+	if do_mute == 'true':
+		muted = xbmc.getCondVisibility("Player.Muted")
+		if muted:
+			xbmc.executebuiltin('xbmc.Mute()')
+		
+def walk(path):
+    trailers = []
+    folders = []
+    # multipath support
+    if path.startswith('multipath://'):
+        # get all paths from the multipath
+        paths = path[12:-1].split('/')
+        for item in paths:
+            folders.append(urllib.unquote_plus(item))
+    else:
+        folders.append(path)
+    for folder in folders:
+        if xbmcvfs.exists(xbmc.translatePath(folder)):
+            # get all files and subfolders
+            dirs,files = xbmcvfs.listdir(folder)
+            for item in files:
+                trailers.append(os.path.join(folder,item))
+            for item in dirs:
+                # recursively scan all subfolders
+                trailers += walk(os.path.join(folder,item))
+    return trailers
 	
 filtergenre = False
 if do_genre == 'true':
@@ -355,5 +456,8 @@ if success:
 else:
 	trailers = getTrailers("")
 
-playTrailers()
+if do_path == 'false':
+	playTrailers()
+else:
+	playPath()
 
