@@ -98,6 +98,10 @@ def getTrailers(genre):
 	trailers = json.loads(trailerstring)	
 	return trailers
 
+class blankscreen(xbmcgui.Window):
+	def onInit(self):
+		pass
+				
 class movieWindow(xbmcgui.WindowXMLDialog):
 
 	def onInit(self):
@@ -193,7 +197,6 @@ class trailerWindow(xbmcgui.WindowXMLDialog):
 		xbmc.log(str(trailer))
 		NUMBER_TRAILERS = NUMBER_TRAILERS -1
 		xbmc.Player().play(trailer)
-		NUMBER_TRAILERS = NUMBER_TRAILERS -1
 		self.getControl(30011).setVisible(False)
 		while xbmc.Player().isPlaying():				
 			xbmc.sleep(250)
@@ -456,8 +459,12 @@ if success:
 else:
 	trailers = getTrailers("")
 
+bs = blankscreen
+bs.show
+
 if do_path == 'false':
 	playTrailers()
 else:
 	playPath()
+del bs
 
