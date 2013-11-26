@@ -198,6 +198,11 @@ class trailerWindow(xbmcgui.WindowXMLDialog):
 		NUMBER_TRAILERS = NUMBER_TRAILERS -1
 		xbmc.Player().play(trailer)
 		self.getControl(30011).setVisible(False)
+		self.getControl(30011).setLabel(trailer)
+		if hide_title == 'false':
+			self.getControl(30011).setVisible(True)
+		else:
+			self.getControl(30011).setVisible(False)
 		while xbmc.Player().isPlaying():				
 			xbmc.sleep(250)
 		self.close()
@@ -222,7 +227,7 @@ class trailerWindow(xbmcgui.WindowXMLDialog):
 
 		if action == ACTION_RIGHT or action == ACTION_TAB:
 			xbmc.Player().stop()
-					
+							
 		if action == ACTION_M:
 			self.getControl(30011).setVisible(True)
 			xbmc.sleep(2000)
