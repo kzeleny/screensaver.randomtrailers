@@ -1,7 +1,7 @@
 # Random trailer player
 #
 # Author - kzeleny
-# Version - 1.0.9
+# Version - 1.0.13
 # Compatibility - Frodo
 #
 
@@ -101,6 +101,7 @@ class movieWindow(xbmcgui.WindowXMLDialog):
 		global SelectedGenre
 		global trailer
 		global do_timeout
+		global NUMBER_TRAILERS
 		trailer=random.choice(trailers["result"]["movies"])
 		lastPlay = True
 		if not trailer["lastplayed"] =='' and hide_watched == 'true':
@@ -114,6 +115,7 @@ class movieWindow(xbmcgui.WindowXMLDialog):
 			else:
 				lastPlay = False
 		if  trailer["trailer"] != '' and lastPlay:
+			NUMBER_TRAILERS = NUMBER_TRAILERS -1
 			if hide_info == 'false':
 				w=infoWindow('script-DialogVideoInfo.xml',addon_path,'default')
 				do_timeout=True
@@ -124,6 +126,7 @@ class movieWindow(xbmcgui.WindowXMLDialog):
 					xbmc.Player().stop()
 			else:
 				xbmc.Player().play(trailer["trailer"])
+				NUMBER_TRAILERS = NUMBER_TRAILERS -1
 			self.getControl(30011).setLabel(trailer["title"] + ' - ' + str(trailer["year"]))
 			if hide_title == 'false':
 				self.getControl(30011).setVisible(True)
@@ -153,12 +156,7 @@ class movieWindow(xbmcgui.WindowXMLDialog):
 			xbmc.Player().stop()
 			exit_requested = True
 			self.close()
-			
-		if action == ACTION_M:
-			self.getControl(30011).setVisible(True)
-			xbmc.sleep(2000)
-			self.getControl(30011).setVisible(False)
-			
+
 		if action == ACTION_RIGHT or action == ACTION_TAB:
 			xbmc.Player().stop()
 			
@@ -168,6 +166,11 @@ class movieWindow(xbmcgui.WindowXMLDialog):
 			movie_file = trailer["file"]
 			self.getControl(30011).setVisible(False)
 			self.close()
+			
+		if action == ACTION_M:
+			self.getControl(30011).setVisible(True)
+			xbmc.sleep(2000)
+			self.getControl(30011).setVisible(False)
 		
 		if action == ACTION_I or action == ACTION_UP:
 			self.getControl(30011).setVisible(False)
@@ -293,6 +296,7 @@ def playTrailers():
 	bs.show()
 	global exit_requested
 	global movie_file
+	global NUMBER_TRAILERS
 	movie_file = ''
 	exit_requested = False
 	player = XBMCPlayer()
@@ -316,7 +320,8 @@ def playTrailers():
 				myMovieWindow.doModal()
 				del myMovieWindow
 		else:
-			for x in xrange(0, NUMBER_TRAILERS):
+			NUMBER_TRAILERS = NUMBER_TRAILERS + 1
+			while NUMBER_TRAILERS > 0:
 				myMovieWindow = movieWindow('script-trailerwindow.xml', addon_path,'default',)
 				myMovieWindow.doModal()
 				del myMovieWindow
