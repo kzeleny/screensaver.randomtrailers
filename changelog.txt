@@ -1,8 +1,9 @@
-v.1.1.0 (November 26, 2013)
+v.1.1.0 (November 27, 2013)
  - updates for gothum compatibility
  - added ability to play trailers from a folder rather than the users library
  - fixed issue where number of trailers incorrect if hide watched movies selected.
  - trailers will now not repeat until all trailers have been played.
+ - fixed issue where trailers would start playing while music is playing
  
 v.1.0.12 (November 25, 2013)
  - added feature if movie title hidden pressing m displays the title for 2 seconds
