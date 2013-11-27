@@ -8,7 +8,7 @@ import os
 def isTrailerScreensaver():
 	pguisettings = xbmc.translatePath( os.path.join( 'special://userdata' , 'guisettings.xml' ) ).decode('utf-8')
 	xbmc.log(pguisettings)
-	name = 'screensaver.randomtrailers'
+	name = '<mode>screensaver.randomtrailers</mode>'
 	if name in file( pguisettings, "r" ).read():
 		xbmc.log('found screensaver.randomtrailers in guisettings.html')
 		return True
