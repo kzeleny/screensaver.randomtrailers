@@ -470,25 +470,28 @@ def walk(path):
                 trailers += walk(os.path.join(folder,item))
     return trailers
 	
-filtergenre = False
-if do_genre == 'true':
-	filtergenre = askGenres()
+if xbmc.Player().isPlaying() == False:
+	filtergenre = False
+	if do_genre == 'true':
+		filtergenre = askGenres()
 	
-success = False
-if filtergenre:
-	success, selectedGenre = selectGenre()
+	success = False
+	if filtergenre:
+		success, selectedGenre = selectGenre()
 
-if success:
-	trailers = getTrailers(selectedGenre)
+	if success:
+		trailers = getTrailers(selectedGenre)
+	else:
+		trailers = getTrailers("")
+
+	bs=blankWindow = blankWindow('script-BlankWindow.xml', addon_path,'default',)
+	bs.show()
+
+	if do_path == 'false':
+		playTrailers()
+	else:
+		playPath()
+	del bs
 else:
-	trailers = getTrailers("")
-
-bs=blankWindow = blankWindow('script-BlankWindow.xml', addon_path,'default',)
-bs.show()
-
-if do_path == 'false':
-	playTrailers()
-else:
-	playPath()
-del bs
+	xbmc.log('Exiting Random Trailers Screen Saver Something is playing!!!!!!')
 
