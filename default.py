@@ -50,6 +50,8 @@ MyFont.addFont( "addon_font15" , "arial.ttf" , "22")
 MyFont.addFont( "addon_font35_title" , "arial.ttf" , "33" , style = "bold")
 trailer=''
 do_timeout = False
+played = []
+
 def askGenres():
 	addon = xbmcaddon.Addon()
 	# default is to select from all movies
@@ -105,11 +107,19 @@ class blankWindow(xbmcgui.WindowXML):
 class movieWindow(xbmcgui.WindowXMLDialog):
 
 	def onInit(self):
+		global played
 		global SelectedGenre
 		global trailer
 		global do_timeout
 		global NUMBER_TRAILERS
+		trailercount=0
 		trailer=random.choice(trailers["result"]["movies"])
+		while trailer["trailer"] in played:
+			trailer=random.choice(trailers["result"]["movies"])
+			trailercount=trailercount+1
+			if trailercount == len(trailers):
+				played=[]
+			
 		lastPlay = True
 		if not trailer["lastplayed"] =='' and hide_watched == 'true':
 			pd=time.strptime(trailer["lastplayed"],'%Y-%m-%d %H:%M:%S')
@@ -123,6 +133,8 @@ class movieWindow(xbmcgui.WindowXMLDialog):
 				lastPlay = False
 		if  trailer["trailer"] != '' and lastPlay:
 			NUMBER_TRAILERS = NUMBER_TRAILERS -1
+			played.append(trailer["trailer"])
+			xbmc.log('Plalyed Count = '+str(len(played)))
 			if hide_info == 'false':
 				w=infoWindow('script-DialogVideoInfo.xml',addon_path,'default')
 				do_timeout=True
@@ -141,6 +153,7 @@ class movieWindow(xbmcgui.WindowXMLDialog):
 				self.getControl(30011).setVisible(False)
 			while xbmc.Player().isPlaying():				
 				xbmc.sleep(250)
+		
 		self.close()
 		
 	def onAction(self, action):
@@ -191,12 +204,17 @@ class movieWindow(xbmcgui.WindowXMLDialog):
 class trailerWindow(xbmcgui.WindowXMLDialog):
 
 	def onInit(self):
+		global played
 		global NUMBER_TRAILERS
 		trailers=walk(trailers_path)
+		if len(trailers) == 0:
+			played = []
+			trailers=walk(trailers_path)
 		trailer=random.choice(trailers)
-		xbmc.log(str(trailer))
 		NUMBER_TRAILERS = NUMBER_TRAILERS -1
 		xbmc.Player().play(trailer)
+		played.append(trailer)
+		xbmc.log('Items Played = ' + str(len(played)))
 		self.getControl(30011).setVisible(False)
 		self.getControl(30011).setLabel(trailer)
 		if hide_title == 'false':
@@ -445,7 +463,8 @@ def walk(path):
             # get all files and subfolders
             dirs,files = xbmcvfs.listdir(folder)
             for item in files:
-                trailers.append(os.path.join(folder,item))
+				if not os.path.join(folder,item) in played:
+					trailers.append(os.path.join(folder,item))
             for item in dirs:
                 # recursively scan all subfolders
                 trailers += walk(os.path.join(folder,item))
