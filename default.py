@@ -1,7 +1,7 @@
 # Random trailer player
 #
 # Author - kzeleny
-# Version - 1.1.0
+# Version - 1.1.1
 # Compatibility - Frodo/Gothum
 #
 
@@ -215,8 +215,11 @@ class trailerWindow(xbmcgui.WindowXMLDialog):
 		xbmc.Player().play(trailer)
 		played.append(trailer)
 		xbmc.log('Items Played = ' + str(len(played)))
+		title = xbmc.translatePath(trailer)
+		title =os.path.basename(title)
+		title =os.path.splitext(title)[0]
 		self.getControl(30011).setVisible(False)
-		self.getControl(30011).setLabel(trailer)
+		self.getControl(30011).setLabel(title)
 		if hide_title == 'false':
 			self.getControl(30011).setVisible(True)
 		else:
@@ -248,7 +251,7 @@ class trailerWindow(xbmcgui.WindowXMLDialog):
 							
 		if action == ACTION_M:
 			self.getControl(30011).setVisible(True)
-			xbmc.sleep(2000)
+			xbmc.sleep(3000)
 			self.getControl(30011).setVisible(False)
 			
 class infoWindow(xbmcgui.WindowXMLDialog):
@@ -472,17 +475,18 @@ def walk(path):
 	
 if xbmc.Player().isPlaying() == False:
 	filtergenre = False
-	if do_genre == 'true':
-		filtergenre = askGenres()
+	if do_path == 'false':
+		if do_genre == 'true':
+			filtergenre = askGenres()
 	
-	success = False
-	if filtergenre:
-		success, selectedGenre = selectGenre()
+		success = False
+		if filtergenre:
+			success, selectedGenre = selectGenre()
 
-	if success:
-		trailers = getTrailers(selectedGenre)
-	else:
-		trailers = getTrailers("")
+		if success:
+			trailers = getTrailers(selectedGenre)
+		else:
+			trailers = getTrailers("")
 
 	bs=blankWindow = blankWindow('script-BlankWindow.xml', addon_path,'default',)
 	bs.show()
