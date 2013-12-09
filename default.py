@@ -17,7 +17,7 @@ import simplejson as json
 import time
 import datetime
 import xbmcaddon
-import MyFont
+
 addon = xbmcaddon.Addon()
 number_trailers =  addon.getSetting('number_trailers')
 do_curtains = 'false'
@@ -42,12 +42,6 @@ if len(sys.argv) == 2:
 else:
 	do_password='false'
 
-# Emulate Confluence fonts
-MyFont.addFont( "addon_font12" , "arial.ttf" , "15")
-MyFont.addFont( "addon_font13" , "arial.ttf" , "18")
-MyFont.addFont( "addon_font14" , "arial.ttf" , "20")
-MyFont.addFont( "addon_font15" , "arial.ttf" , "22")
-MyFont.addFont( "addon_font35_title" , "arial.ttf" , "33" , style = "bold")
 trailer=''
 do_timeout = False
 played = []
