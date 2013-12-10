@@ -18,7 +18,7 @@
     <platform>all</platform>
     <summary lang="en">Random Trailer Player and Screensaver</summary>
     <description lang="en">
-	Plays random movie trailers from user's library. Installs as a Screensaver and a Program. 
+	Plays random movie trailers from user's library or from a folder. Installs as a Screensaver and a Program. 
 	Options to filter by genre, select number of trailers, hide trailers of watched movies, and display opening / closing animations. 
 	When viewing trailers you can press UP or I to view movie information and DOWN or I to hide. RIGHT or X will display next trailer. LEFT or ESC will exit.
 	</description>
