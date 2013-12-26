@@ -369,12 +369,6 @@ def playTrailers():
 	DO_CURTIANS = addon.getSetting('do_animation')
 	DO_EXIT = addon.getSetting('do_exit')
 	NUMBER_TRAILERS =  int(addon.getSetting('number_trailers'))
-	if do_volume == 'true':
-		muted = xbmc.getCondVisibility("Player.Muted")
-		if not muted and volume == 0:
-			xbmc.executebuiltin('xbmc.Mute()')
-		else:
-			xbmc.executebuiltin('XBMC.SetVolume('+str(volume)+')')	
 	if DO_CURTIANS == 'true':
 		player.play(open_curtain_path)
 		while player.isPlaying():
@@ -400,12 +394,6 @@ def playTrailers():
 				while player.isPlaying():
 					xbmc.sleep(250)
 		exit_requested=True
-	if do_volume == 'true':
-		muted = xbmc.getCondVisibility("Player.Muted")
-		if muted and volume == 0:
-			xbmc.executebuiltin('xbmc.Mute()')
-		else:
-			xbmc.executebuiltin('XBMC.SetVolume('+str(currentVolume)+')')	
 	if not movie_file == '':
 		xbmc.Player(0).play(movie_file)
 
@@ -417,12 +405,6 @@ def playPath():
 	DO_CURTIANS = addon.getSetting('do_animation')
 	DO_EXIT = addon.getSetting('do_exit')
 	NUMBER_TRAILERS =  int(addon.getSetting('number_trailers'))
-	if do_volume == 'true':
-		muted = xbmc.getCondVisibility("Player.Muted")
-		if not muted and volume == 0:
-			xbmc.executebuiltin('xbmc.Mute()')
-		else:
-			xbmc.executebuiltin('XBMC.SetVolume('+str(volume)+')')	
 	if DO_CURTIANS == 'true':
 		player.play(open_curtain_path)
 		while player.isPlaying():
@@ -448,12 +430,6 @@ def playPath():
 				while player.isPlaying():
 					xbmc.sleep(250)
 		exit_requested=True
-	if do_volume == 'true':
-		muted = xbmc.getCondVisibility("Player.Muted")
-		if muted and volume == 0:
-			xbmc.executebuiltin('xbmc.Mute()')
-		else:
-			xbmc.executebuiltin('XBMC.SetVolume('+str(currentVolume)+')')	
 			
 def walk(path):
     trailers = []
@@ -495,12 +471,23 @@ if xbmc.Player().isPlaying() == False:
 
 	bs=blankWindow = blankWindow('script-BlankWindow.xml', addon_path,'default',)
 	bs.show()
-
+	if do_volume == 'true':
+		muted = xbmc.getCondVisibility("Player.Muted")
+		if not muted and volume == 0:
+			xbmc.executebuiltin('xbmc.Mute()')
+		else:
+			xbmc.executebuiltin('XBMC.SetVolume('+str(volume)+')')	
 	if do_path == 'false':
 		playTrailers()
 	else:
 		playPath()
 	del bs
+	if do_volume == 'true':
+		muted = xbmc.getCondVisibility("Player.Muted")
+		if muted and volume == 0:
+			xbmc.executebuiltin('xbmc.Mute()')
+		else:
+			xbmc.executebuiltin('XBMC.SetVolume('+str(currentVolume)+')')		
 else:
 	xbmc.log('Exiting Random Trailers Screen Saver Something is playing!!!!!!')
 
