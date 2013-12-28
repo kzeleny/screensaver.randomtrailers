@@ -1,7 +1,7 @@
 # Random trailer player
 #
 # Author - kzeleny
-# Version - 1.1.2
+# Version - 1.1.3
 # Compatibility - Frodo/Gothum
 #
 
@@ -9,6 +9,8 @@ import xbmc
 import xbmcvfs
 import xbmcgui
 from urllib import quote_plus, unquote_plus
+import urllib
+import urllib2
 import re
 import sys
 import os
@@ -24,12 +26,19 @@ do_curtains = 'false'
 do_genre = addon.getSetting('do_genre')
 do_volume = addon.getSetting('do_volume')
 volume = int(addon.getSetting("volume"))
+path = addon.getSetting('path')
+trailer_source=int(addon.getSetting('trailer_source'))
+if trailer_source==0:trailer_source='library'
+if trailer_source==1:trailer_source='itunes'
+if trailer_source==2:trailer_source='folder'
+xbmc.log('source ='+trailer_source)
+if volume > 100:
+    do_volume='false'
 currentVolume = xbmc.getInfoLabel("Player.Volume")
 currentVolume = int((float(currentVolume.split(" ")[0])+60.0)/60.0*100.0)
 hide_info = addon.getSetting('hide_info')
 hide_title = addon.getSetting('hide_title')
 trailers_path = addon.getSetting('path')
-do_path = addon.getSetting('do_path')
 addon_path = addon.getAddonInfo('path')
 hide_watched = addon.getSetting('hide_watched')
 watched_days = addon.getSetting('watched_days')
@@ -40,26 +49,34 @@ close_curtain_path = xbmc.translatePath( os.path.join( media_path, 'ClosingSeque
 selectedGenre =''
 exit_requested = False
 movie_file = ''
+addonID = "screensaver.randomtrailers"
+addonUserDataFolder = xbmc.translatePath("special://profile/addon_data/"+addonID)
+cacheFile = xbmc.translatePath("special://profile/addon_data/"+addonID+"/cache")
+cacheLifetime = 24
+if not os.path.isdir(addonUserDataFolder):
+  os.mkdir(addonUserDataFolder)
+opener = urllib2.build_opener()
+opener.addheaders = [('User-Agent', 'iTunes')]
+urlMain = "http://trailers.apple.com"
+
 if len(sys.argv) == 2:
-	do_genre ='false'
-else:
-	do_password='false'
+    do_genre ='false'
 
 trailer=''
 do_timeout = False
 played = []
 
 def askGenres():
-	addon = xbmcaddon.Addon()
-	# default is to select from all movies
-	selectGenre = False
-	# ask user whether they want to select a genre
-	a = xbmcgui.Dialog().yesno(addon.getLocalizedString(32100), addon.getLocalizedString(32101))
-	# deal with the output
-	if a == 1: 
-	# set filter
-		selectGenre = True
-	return selectGenre  
+    addon = xbmcaddon.Addon()
+    # default is to select from all movies
+    selectGenre = False
+    # ask user whether they want to select a genre
+    a = xbmcgui.Dialog().yesno(addon.getLocalizedString(32100), addon.getLocalizedString(32101))
+    # deal with the output
+    if a == 1: 
+    # set filter
+        selectGenre = True
+    return selectGenre  
   
 def selectGenre():
   success = False
@@ -89,349 +106,483 @@ def selectGenre():
     success = False
   # return the genre and whether the choice was successfult
   return success, selectedGenre
-  
+
+def getVideos():
+    do_clips=addon.getSetting('do_clips')
+    do_featurettes=addon.getSetting('do_featurettes')
+    entries = []
+    if os.path.exists(cacheFile) and (time.time()-os.path.getmtime(cacheFile) < cacheLifetime*24*60):
+        fh = open(cacheFile, 'r')
+        content = fh.read()
+        fh.close()
+    else:
+        content = opener.open(urlMain+"/trailers/home/feeds/studios.json").read()
+        fh = open(cacheFile, 'w')
+        fh.write(content)
+        fh.close()
+    spl = content.split('"title"')
+    for i in range(1, len(spl), 1):
+        entry = spl[i]
+        match = re.compile('"(.+?)"', re.DOTALL).findall(entry)
+        title = match[0]
+        match = re.compile('"url":"(.+?)","type":"(.+?)"', re.DOTALL).findall(entry)
+        for url, type in match:
+            urlTemp = urlMain+url+"includes/"+type.replace('-', '').replace(' ', '').lower()+"/large.html"
+            url = "plugin://screensaver.randomtrailers/?url="+urllib.quote_plus(urlTemp)
+            filter = ["- JP Sub","Interview","- UK","- BR Sub","- FR","- IT","- AU","- MX","- MX Sub","- BR","- RU","- DE","- ES","- FR Sub","- KR Sub","- Russian","- French","- Spanish","- German","- Latin American Spanish","- Italian"]
+            filtered = False
+            for f in filter:
+                if f in type:
+                    filtered = True
+            if do_clips=='false':
+                if 'Clip' in type:
+                    filtered = True
+            if do_featurettes =='false':
+                if 'Featurette' in type:
+                    filtered = True
+            if not filtered:
+                xbmc.log('Added ' + title+" - "+type)
+                entries.append([title+" - "+type, url])
+    return entries
+    
 def getTrailers(genre):
-	# get the raw JSON output
-	trailerstring = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetMovies", "params": {"properties": ["title", "lastplayed", "studio", "writer", "plot", "votes", "top250", "originaltitle", "director", "tagline", "fanart", "runtime", "mpaa", "rating", "thumbnail", "file", "year", "genre", "trailer"], "filter": {"field": "genre", "operator": "contains", "value": "%s"}}, "id": 1}' % genre)
-	trailerstring = unicode(trailerstring, 'utf-8', errors='ignore')
-	trailers = json.loads(trailerstring)	
-	return trailers
+    # get the raw JSON output
+    trailerstring = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetMovies", "params": {"properties": ["title", "lastplayed", "studio", "writer", "plot", "votes", "top250", "originaltitle", "director", "tagline", "fanart", "runtime", "mpaa", "rating", "thumbnail", "file", "year", "genre", "trailer"], "filter": {"field": "genre", "operator": "contains", "value": "%s"}}, "id": 1}' % genre)
+    trailerstring = unicode(trailerstring, 'utf-8', errors='ignore')
+    trailers = json.loads(trailerstring)    
+    return trailers
 
 class blankWindow(xbmcgui.WindowXML):
-	def onInit(self):
-		pass
-		
+    def onInit(self):
+        pass
+        
 class movieWindow(xbmcgui.WindowXMLDialog):
 
-	def onInit(self):
-		global played
-		global SelectedGenre
-		global trailer
-		global do_timeout
-		global NUMBER_TRAILERS
-		trailercount=0
-		trailer=random.choice(trailers["result"]["movies"])
-		while trailer["trailer"] in played:
-			trailer=random.choice(trailers["result"]["movies"])
-			trailercount=trailercount+1
-			if trailercount == len(trailers):
-				played=[]
-			
-		lastPlay = True
-		if not trailer["lastplayed"] =='' and hide_watched == 'true':
-			pd=time.strptime(trailer["lastplayed"],'%Y-%m-%d %H:%M:%S')
-			pd = time.mktime(pd)
-			pd = datetime.datetime.fromtimestamp(pd)
-			lastPlay = datetime.datetime.now() - pd
-			lastPlay = lastPlay.days
-			if lastPlay > int(watched_days) or watched_days == '0':
-				lastPlay = True
-			else:
-				lastPlay = False
-		if  trailer["trailer"] != '' and lastPlay:
-			NUMBER_TRAILERS = NUMBER_TRAILERS -1
-			played.append(trailer["trailer"])
-			xbmc.log('Plalyed Count = '+str(len(played)))
-			if hide_info == 'false':
-				w=infoWindow('script-DialogVideoInfo.xml',addon_path,'default')
-				do_timeout=True
-				w.doModal()
-				do_timeout=False
-				del w
-				if exit_requested:
-					xbmc.Player().stop()
-			else:
-				xbmc.Player().play(trailer["trailer"])
-				NUMBER_TRAILERS = NUMBER_TRAILERS -1
-			self.getControl(30011).setLabel(trailer["title"] + ' - ' + str(trailer["year"]))
-			if hide_title == 'false':
-				self.getControl(30011).setVisible(True)
-			else:
-				self.getControl(30011).setVisible(False)
-			while xbmc.Player().isPlaying():				
-				xbmc.sleep(250)
-		
-		self.close()
-		
-	def onAction(self, action):
-		ACTION_PREVIOUS_MENU = 10
-		ACTION_BACK = 92
-		ACTION_ENTER = 7
-		ACTION_I = 11
-		ACTION_LEFT = 1
-		ACTION_RIGHT = 2
-		ACTION_UP = 3
-		ACTION_DOWN = 4
-		ACTION_TAB = 18
-		ACTION_M = 122
-		
-		xbmc.log('action  =' + str(action.getId()))
-		
-		global exit_requested
-		global movie_file
-		if action == ACTION_PREVIOUS_MENU or action == ACTION_LEFT or action == ACTION_BACK:
-			xbmc.Player().stop()
-			exit_requested = True
-			self.close()
+    def onInit(self):
+        global played
+        global SelectedGenre
+        global trailer
+        global do_timeout
+        global NUMBER_TRAILERS
+        global trailercount
+        random.shuffle(trailers["result"]["movies"])
+        trailercount=0
+        trailer=random.choice(trailers["result"]["movies"])
+        while trailer["trailer"] in played:
+            trailer=random.choice(trailers["result"]["movies"])
+            trailercount=trailercount+1
+            if trailercount == len(trailers):
+                played=[]
+            
+        lastPlay = True
+        if not trailer["lastplayed"] =='' and hide_watched == 'true':
+            pd=time.strptime(trailer["lastplayed"],'%Y-%m-%d %H:%M:%S')
+            pd = time.mktime(pd)
+            pd = datetime.datetime.fromtimestamp(pd)
+            lastPlay = datetime.datetime.now() - pd
+            lastPlay = lastPlay.days
+            if lastPlay > int(watched_days) or watched_days == '0':
+                lastPlay = True
+            else:
+                lastPlay = False
+        if  trailer["trailer"] != '' and lastPlay:
+            NUMBER_TRAILERS = NUMBER_TRAILERS -1
+            played.append(trailer["trailer"])
+            xbmc.log('Plalyed Count = '+str(len(played)))
+            if hide_info == 'false':
+                w=infoWindow('script-DialogVideoInfo.xml',addon_path,'default')
+                do_timeout=True
+                w.doModal()
+                do_timeout=False
+                del w
+                if exit_requested:
+                    xbmc.Player().stop()
+            else:
+                xbmc.Player().play(trailer["trailer"])
+                NUMBER_TRAILERS = NUMBER_TRAILERS -1
+            self.getControl(30011).setLabel(trailer["title"] + ' - ' + str(trailer["year"]))
+            if hide_title == 'false':
+                self.getControl(30011).setVisible(True)
+            else:
+                self.getControl(30011).setVisible(False)
+            while xbmc.Player().isPlaying():                
+                xbmc.sleep(250)
+        
+        self.close()
+        
+    def onAction(self, action):
+        ACTION_PREVIOUS_MENU = 10
+        ACTION_BACK = 92
+        ACTION_ENTER = 7
+        ACTION_I = 11
+        ACTION_LEFT = 1
+        ACTION_RIGHT = 2
+        ACTION_UP = 3
+        ACTION_DOWN = 4
+        ACTION_TAB = 18
+        ACTION_M = 122
+        
+        xbmc.log('action  =' + str(action.getId()))
+        
+        global exit_requested
+        global movie_file
+        if action == ACTION_PREVIOUS_MENU or action == ACTION_LEFT or action == ACTION_BACK:
+            xbmc.Player().stop()
+            exit_requested = True
+            self.close()
 
-		if action == ACTION_RIGHT or action == ACTION_TAB:
-			xbmc.Player().stop()
-			
-		if action == ACTION_ENTER:
-			exit_requested = True
-			xbmc.Player().stop()
-			movie_file = trailer["file"]
-			self.getControl(30011).setVisible(False)
-			self.close()
-			
-		if action == ACTION_M:
-			self.getControl(30011).setVisible(True)
-			xbmc.sleep(2000)
-			self.getControl(30011).setVisible(False)
-		
-		if action == ACTION_I or action == ACTION_UP:
-			self.getControl(30011).setVisible(False)
-			w=infoWindow('script-DialogVideoInfo.xml',addon_path,'default')
-			w.doModal()
-			if hide_title == 'false':
-				self.getControl(30011).setVisible(True)
-			else:
-				self.getControl(30011).setVisible(False)
-			
+        if action == ACTION_RIGHT or action == ACTION_TAB:
+            xbmc.Player().stop()
+            
+        if action == ACTION_ENTER:
+            exit_requested = True
+            xbmc.Player().stop()
+            movie_file = trailer["file"]
+            self.getControl(30011).setVisible(False)
+            self.close()
+            
+        if action == ACTION_M:
+            self.getControl(30011).setVisible(True)
+            xbmc.sleep(2000)
+            self.getControl(30011).setVisible(False)
+        
+        if action == ACTION_I or action == ACTION_UP:
+            self.getControl(30011).setVisible(False)
+            w=infoWindow('script-DialogVideoInfo.xml',addon_path,'default')
+            w.doModal()
+            if hide_title == 'false':
+                self.getControl(30011).setVisible(True)
+            else:
+                self.getControl(30011).setVisible(False)
+            
 class trailerWindow(xbmcgui.WindowXMLDialog):
 
-	def onInit(self):
-		global played
-		global NUMBER_TRAILERS
-		trailers=walk(trailers_path)
-		if len(trailers) == 0:
-			played = []
-			trailers=walk(trailers_path)
-		trailer=random.choice(trailers)
-		NUMBER_TRAILERS = NUMBER_TRAILERS -1
-		xbmc.Player().play(trailer)
-		played.append(trailer)
-		xbmc.log('Items Played = ' + str(len(played)))
-		title = xbmc.translatePath(trailer)
-		title =os.path.basename(title)
-		title =os.path.splitext(title)[0]
-		self.getControl(30011).setVisible(False)
-		self.getControl(30011).setLabel(title)
-		if hide_title == 'false':
-			self.getControl(30011).setVisible(True)
-		else:
-			self.getControl(30011).setVisible(False)
-		while xbmc.Player().isPlaying():				
-			xbmc.sleep(250)
-		self.close()
-		
-	def onAction(self, action):
-		ACTION_PREVIOUS_MENU = 10
-		ACTION_BACK = 92
-		ACTION_ENTER = 7
-		ACTION_I = 11
-		ACTION_LEFT = 1
-		ACTION_RIGHT = 2
-		ACTION_UP = 3
-		ACTION_DOWN = 4
-		ACTION_TAB = 18
-		ACTION_M = 122
-		
-		global exit_requested
-		if action == ACTION_PREVIOUS_MENU or action == ACTION_LEFT or action == ACTION_BACK:
-			xbmc.Player().stop()
-			exit_requested = True
-			self.close()
+    def onInit(self):
+        global played
+        global NUMBER_TRAILERS
+        global trailercount
+        played = []
+        random.shuffle(trailers)
+        trailer=random.choice(trailers)
+        while trailer in played:
+            trailer=random.choice(trailers)
+            trailercount=trailercount+1
+            if trailercount == len(trailers):
+                played=[]
+        NUMBER_TRAILERS = NUMBER_TRAILERS -1
+        xbmc.Player().play(trailer)
+        played.append(trailer)
+        title = xbmc.translatePath(trailer)
+        title =os.path.basename(title)
+        title =os.path.splitext(title)[0]
+        self.getControl(30011).setVisible(False)
+        self.getControl(30011).setLabel(title)
+        if hide_title == 'false':
+            self.getControl(30011).setVisible(True)
+        else:
+            self.getControl(30011).setVisible(False)
+        while xbmc.Player().isPlaying():                
+            xbmc.sleep(250)
+        self.close()
+        
+    def onAction(self, action):
+        ACTION_PREVIOUS_MENU = 10
+        ACTION_BACK = 92
+        ACTION_ENTER = 7
+        ACTION_I = 11
+        ACTION_LEFT = 1
+        ACTION_RIGHT = 2
+        ACTION_UP = 3
+        ACTION_DOWN = 4
+        ACTION_TAB = 18
+        ACTION_M = 122
+        
+        global exit_requested
+        if action == ACTION_PREVIOUS_MENU or action == ACTION_LEFT or action == ACTION_BACK:
+            xbmc.Player().stop()
+            exit_requested = True
+            self.close()
 
-		if action == ACTION_RIGHT or action == ACTION_TAB:
-			xbmc.Player().stop()
-							
-		if action == ACTION_M:
-			self.getControl(30011).setVisible(True)
-			xbmc.sleep(3000)
-			self.getControl(30011).setVisible(False)
-			
+        if action == ACTION_RIGHT or action == ACTION_TAB:
+            xbmc.Player().stop()
+                            
+        if action == ACTION_M:
+            self.getControl(30011).setVisible(True)
+            xbmc.sleep(3000)
+            self.getControl(30011).setVisible(False)
+            
+class videoWindow(xbmcgui.WindowXMLDialog):
+
+    def onInit(self):
+        global played
+        global NUMBER_TRAILERS
+        global trailercount
+        random.shuffle(trailers)
+        trailer=random.choice(trailers)
+        while trailer[1] in played:
+            trailer=random.choice(trailers)
+            trailercount=trailercount+1
+            if trailercount == len(trailers):
+                played=[]        
+        played.append(trailer[1])
+        xbmc.Player().play(trailer[1])
+        xbmc.sleep(250)
+        if xbmc.Player().isPlayingVideo():
+            title = trailer[0]
+            self.getControl(30011).setVisible(False)
+            self.getControl(30011).setLabel(title)
+            if hide_title == 'false':
+                self.getControl(30011).setVisible(True)
+            else:
+                self.getControl(30011).setVisible(False)
+            NUMBER_TRAILERS = NUMBER_TRAILERS -1
+        while xbmc.Player().isPlaying():                
+            xbmc.sleep(250)
+        self.close()
+        
+    def onAction(self, action):
+        ACTION_PREVIOUS_MENU = 10
+        ACTION_BACK = 92
+        ACTION_ENTER = 7
+        ACTION_I = 11
+        ACTION_LEFT = 1
+        ACTION_RIGHT = 2
+        ACTION_UP = 3
+        ACTION_DOWN = 4
+        ACTION_TAB = 18
+        ACTION_M = 122
+        
+        global exit_requested
+        if action == ACTION_PREVIOUS_MENU or action == ACTION_LEFT or action == ACTION_BACK:
+            xbmc.Player().stop()
+            exit_requested = True
+            self.close()
+
+        if action == ACTION_RIGHT or action == ACTION_TAB:
+            xbmc.Player().stop()
+                            
+        if action == ACTION_M:
+            self.getControl(30011).setVisible(True)
+            xbmc.sleep(3000)
+            self.getControl(30011).setVisible(False)
+                        
 class infoWindow(xbmcgui.WindowXMLDialog):
 
-	def onInit(self):
-		self.getControl(30001).setImage(trailer["thumbnail"])
-		self.getControl(30003).setImage(trailer["fanart"])
-		self.getControl(30002).setLabel(trailer["title"])
-		self.getControl(30012).setLabel(trailer["tagline"])
-		self.getControl(30004).setLabel(trailer["originaltitle"])
-		directors = trailer["director"]
-		movieDirector=''
-		for director in directors:
-			movieDirector = movieDirector + director + ', '
-			if not movieDirector =='':
-				movieDirector = movieDirector[:-2]
-		self.getControl(30005).setLabel(movieDirector)
-		writers = trailer["writer"]
-		movieWriter=''
-		for writer in writers:
-			movieWriter = movieWriter + writer + ', '
-			if not movieWriter =='':
-				movieWriter = movieWriter[:-2]
-		self.getControl(30006).setLabel(movieWriter)
-		strImdb=''
-		if not trailer["top250"] == 0:
-			strImdb = ' - IMDB Top 250:' + str(trailer["top250"]) 
-		self.getControl(30007).setLabel(str(round(trailer["rating"],2)) + ' (' + str(trailer["votes"]) + ' votes)' + strImdb)
-		self.getControl(30009).setText(trailer["plot"])
-		movieStudio=''
-		studios=trailer["studio"]
-		for studio in studios:
-			movieStudio = movieStudio + studio + ', '
-			if not movieStudio =='':
-				movieStudio = movieStudio[:-2]
-		self.getControl(30010).setLabel(movieStudio + ' - ' + str(trailer["year"]))
-		movieGenre=''
-		genres = trailer["genre"]
-		for genre in genres:
-			movieGenre = movieGenre + genre + ' / '
-		if not movieGenre =='':
-			movieGenre = movieGenre[:-3]
-		self.getControl(30011).setLabel(str(trailer["runtime"] / 60) + ' Minutes - ' + movieGenre)
-		imgRating='ratings/notrated.png'
-		if trailer["mpaa"].startswith('G'): imgRating='ratings/g.png'
-		if trailer["mpaa"] == ('G'): imgRating='ratings/g.png'
-		if trailer["mpaa"].startswith('Rated G'): imgRating='ratings/g.png'
-		if trailer["mpaa"].startswith('PG '): imgRating='ratings/pg.png'
-		if trailer["mpaa"] == ('PG'): imgRating='ratings/pg.png'
-		if trailer["mpaa"].startswith('Rated PG'): imgRating='ratings/pg.png'
-		if trailer["mpaa"].startswith('PG-13 '): imgRating='ratings/pg13.png'
-		if trailer["mpaa"] == ('PG-13'): imgRating='ratings/pg13.png'
-		if trailer["mpaa"].startswith('Rated PG-13'): imgRating='ratings/pg13.png'
-		if trailer["mpaa"].startswith('R '): imgRating='ratings/r.png'
-		if trailer["mpaa"] == ('R'): imgRating='ratings/r.png'
-		if trailer["mpaa"].startswith('Rated R'): imgRating='ratings/r.png'
-		if trailer["mpaa"].startswith('NC17'): imgRating='ratings/nc17.png'
-		if trailer["mpaa"].startswith('Rated NC17'): imgRating='ratings/nc1.png'
-		self.getControl(30013).setImage(imgRating)
-		if do_timeout:
-			xbmc.sleep(2500)
-			xbmc.Player().play(trailer["trailer"])
-			self.close()
-		
-	def onAction(self, action):
-		ACTION_PREVIOUS_MENU = 10
-		ACTION_BACK = 92
-		ACTION_ENTER = 7
-		ACTION_I = 11
-		ACTION_LEFT = 1
-		ACTION_RIGHT = 2
-		ACTION_UP = 3
-		ACTION_DOWN = 4
-		ACTION_TAB = 18
-		
-		xbmc.log('action  =' + str(action.getId()))
-		global do_timeout
-		global exit_requested
-		global movie_file
-		if action == ACTION_PREVIOUS_MENU or action == ACTION_LEFT or action == ACTION_BACK:
-			do_timeout=False
-			xbmc.Player().stop()
-			exit_requested=True
-			self.close()
-			
-		if action == ACTION_I or action == ACTION_DOWN:
-			self.close()
-			
-		if action == ACTION_RIGHT or action == ACTION_TAB:
-			xbmc.Player().stop()
-			self.close()
+    def onInit(self):
+        self.getControl(30001).setImage(trailer["thumbnail"])
+        self.getControl(30003).setImage(trailer["fanart"])
+        self.getControl(30002).setLabel(trailer["title"])
+        self.getControl(30012).setLabel(trailer["tagline"])
+        self.getControl(30004).setLabel(trailer["originaltitle"])
+        directors = trailer["director"]
+        movieDirector=''
+        for director in directors:
+            movieDirector = movieDirector + director + ', '
+            if not movieDirector =='':
+                movieDirector = movieDirector[:-2]
+        self.getControl(30005).setLabel(movieDirector)
+        writers = trailer["writer"]
+        movieWriter=''
+        for writer in writers:
+            movieWriter = movieWriter + writer + ', '
+            if not movieWriter =='':
+                movieWriter = movieWriter[:-2]
+        self.getControl(30006).setLabel(movieWriter)
+        strImdb=''
+        if not trailer["top250"] == 0:
+            strImdb = ' - IMDB Top 250:' + str(trailer["top250"]) 
+        self.getControl(30007).setLabel(str(round(trailer["rating"],2)) + ' (' + str(trailer["votes"]) + ' votes)' + strImdb)
+        self.getControl(30009).setText(trailer["plot"])
+        movieStudio=''
+        studios=trailer["studio"]
+        for studio in studios:
+            movieStudio = movieStudio + studio + ', '
+            if not movieStudio =='':
+                movieStudio = movieStudio[:-2]
+        self.getControl(30010).setLabel(movieStudio + ' - ' + str(trailer["year"]))
+        movieGenre=''
+        genres = trailer["genre"]
+        for genre in genres:
+            movieGenre = movieGenre + genre + ' / '
+        if not movieGenre =='':
+            movieGenre = movieGenre[:-3]
+        self.getControl(30011).setLabel(str(trailer["runtime"] / 60) + ' Minutes - ' + movieGenre)
+        imgRating='ratings/notrated.png'
+        if trailer["mpaa"].startswith('G'): imgRating='ratings/g.png'
+        if trailer["mpaa"] == ('G'): imgRating='ratings/g.png'
+        if trailer["mpaa"].startswith('Rated G'): imgRating='ratings/g.png'
+        if trailer["mpaa"].startswith('PG '): imgRating='ratings/pg.png'
+        if trailer["mpaa"] == ('PG'): imgRating='ratings/pg.png'
+        if trailer["mpaa"].startswith('Rated PG'): imgRating='ratings/pg.png'
+        if trailer["mpaa"].startswith('PG-13 '): imgRating='ratings/pg13.png'
+        if trailer["mpaa"] == ('PG-13'): imgRating='ratings/pg13.png'
+        if trailer["mpaa"].startswith('Rated PG-13'): imgRating='ratings/pg13.png'
+        if trailer["mpaa"].startswith('R '): imgRating='ratings/r.png'
+        if trailer["mpaa"] == ('R'): imgRating='ratings/r.png'
+        if trailer["mpaa"].startswith('Rated R'): imgRating='ratings/r.png'
+        if trailer["mpaa"].startswith('NC17'): imgRating='ratings/nc17.png'
+        if trailer["mpaa"].startswith('Rated NC17'): imgRating='ratings/nc1.png'
+        self.getControl(30013).setImage(imgRating)
+        if do_timeout:
+            xbmc.sleep(2500)
+            xbmc.Player().play(trailer["trailer"])
+            self.close()
+        
+    def onAction(self, action):
+        ACTION_PREVIOUS_MENU = 10
+        ACTION_BACK = 92
+        ACTION_ENTER = 7
+        ACTION_I = 11
+        ACTION_LEFT = 1
+        ACTION_RIGHT = 2
+        ACTION_UP = 3
+        ACTION_DOWN = 4
+        ACTION_TAB = 18
+        
+        xbmc.log('action  =' + str(action.getId()))
+        global do_timeout
+        global exit_requested
+        global movie_file
+        if action == ACTION_PREVIOUS_MENU or action == ACTION_LEFT or action == ACTION_BACK:
+            do_timeout=False
+            xbmc.Player().stop()
+            exit_requested=True
+            self.close()
+            
+        if action == ACTION_I or action == ACTION_DOWN:
+            self.close()
+            
+        if action == ACTION_RIGHT or action == ACTION_TAB:
+            xbmc.Player().stop()
+            self.close()
 
-		if action == ACTION_ENTER:
-			movie_file = trailer["file"]
-			xbmc.Player().stop()
-			exit_requested=True
-			self.close()
-		
-	
+        if action == ACTION_ENTER:
+            movie_file = trailer["file"]
+            xbmc.Player().stop()
+            exit_requested=True
+            self.close()
+        
+    
 class XBMCPlayer(xbmc.Player):
-	def __init__( self, *args, **kwargs ):
-		pass
-	def onPlayBackStarted(self):
-		pass
-	
-	def onPlayBackStopped(self):
-		global exit_requested
-		pass
-		
+    def __init__( self, *args, **kwargs ):
+        pass
+    def onPlayBackStarted(self):
+        pass
+    
+    def onPlayBackStopped(self):
+        global exit_requested
+        pass
+        
+def playVideo():
+    global exit_requested
+    global NUMBER_TRAILERS
+    global trailercount
+    exit_requested = False
+    player = XBMCPlayer()
+    DO_CURTIANS = addon.getSetting('do_animation')
+    DO_EXIT = addon.getSetting('do_exit')
+    NUMBER_TRAILERS =  int(addon.getSetting('number_trailers'))
+    if DO_CURTIANS == 'true':
+        player.play(open_curtain_path)
+        while player.isPlaying():
+            xbmc.sleep(250)
+    trailercount = 0
+    while not exit_requested:
+        if NUMBER_TRAILERS == 0:
+            while not exit_requested and not xbmc.abortRequested:
+                myMovieWindow = videoWindow('script-trailerwindow.xml', addon_path,'default',)
+                myMovieWindow.doModal()
+                del myMovieWindow
+        else:
+            while NUMBER_TRAILERS > 0:
+                myMovieWindow = videoWindow('script-trailerwindow.xml', addon_path,'default',)
+                myMovieWindow.doModal()
+                del myMovieWindow
+                if exit_requested:
+                    break
+        if not exit_requested:
+            if DO_CURTIANS == 'true':
+                player.play(close_curtain_path)
+                while player.isPlaying():
+                    xbmc.sleep(250)
+        exit_requested=True        
+        
 def playTrailers():
-	global exit_requested
-	global movie_file
-	global NUMBER_TRAILERS
-	movie_file = ''
-	exit_requested = False
-	player = XBMCPlayer()
-	#xbmc.log('Getting Trailers')
-	DO_CURTIANS = addon.getSetting('do_animation')
-	DO_EXIT = addon.getSetting('do_exit')
-	NUMBER_TRAILERS =  int(addon.getSetting('number_trailers'))
-	if DO_CURTIANS == 'true':
-		player.play(open_curtain_path)
-		while player.isPlaying():
-			xbmc.sleep(250)
-	trailercount = 0
-	while not exit_requested:
-		if NUMBER_TRAILERS == 0:
-			while not exit_requested and not xbmc.abortRequested:
-				myMovieWindow = movieWindow('script-trailerwindow.xml', addon_path,'default',)
-				myMovieWindow.doModal()
-				del myMovieWindow
-		else:
-			NUMBER_TRAILERS = NUMBER_TRAILERS + 1
-			while NUMBER_TRAILERS > 0:
-				myMovieWindow = movieWindow('script-trailerwindow.xml', addon_path,'default',)
-				myMovieWindow.doModal()
-				del myMovieWindow
-				if exit_requested:
-					break
-		if not exit_requested:
-			if DO_CURTIANS == 'true':
-				player.play(close_curtain_path)
-				while player.isPlaying():
-					xbmc.sleep(250)
-		exit_requested=True
-	if not movie_file == '':
-		xbmc.Player(0).play(movie_file)
+    global exit_requested
+    global movie_file
+    global NUMBER_TRAILERS
+    global trailercount
+    movie_file = ''
+    exit_requested = False
+    player = XBMCPlayer()
+    #xbmc.log('Getting Trailers')
+    DO_CURTIANS = addon.getSetting('do_animation')
+    DO_EXIT = addon.getSetting('do_exit')
+    NUMBER_TRAILERS =  int(addon.getSetting('number_trailers'))
+    if DO_CURTIANS == 'true':
+        player.play(open_curtain_path)
+        while player.isPlaying():
+            xbmc.sleep(250)
+    trailercount = 0
+    while not exit_requested:
+        if NUMBER_TRAILERS == 0:
+            while not exit_requested and not xbmc.abortRequested:
+                myMovieWindow = movieWindow('script-trailerwindow.xml', addon_path,'default',)
+                myMovieWindow.doModal()
+                del myMovieWindow
+        else:
+            NUMBER_TRAILERS = NUMBER_TRAILERS + 1
+            while NUMBER_TRAILERS > 0:
+                myMovieWindow = movieWindow('script-trailerwindow.xml', addon_path,'default',)
+                myMovieWindow.doModal()
+                del myMovieWindow
+                if exit_requested:
+                    break
+        if not exit_requested:
+            if DO_CURTIANS == 'true':
+                player.play(close_curtain_path)
+                while player.isPlaying():
+                    xbmc.sleep(250)
+        exit_requested=True
+    if not movie_file == '':
+        xbmc.Player(0).play(movie_file)
 
 def playPath():
-	global exit_requested
-	global NUMBER_TRAILERS
-	exit_requested = False
-	player = XBMCPlayer()
-	DO_CURTIANS = addon.getSetting('do_animation')
-	DO_EXIT = addon.getSetting('do_exit')
-	NUMBER_TRAILERS =  int(addon.getSetting('number_trailers'))
-	if DO_CURTIANS == 'true':
-		player.play(open_curtain_path)
-		while player.isPlaying():
-			xbmc.sleep(250)
-	trailercount = 0
-	while not exit_requested:
-		if NUMBER_TRAILERS == 0:
-			while not exit_requested and not xbmc.abortRequested:
-				myMovieWindow = trailerWindow('script-trailerwindow.xml', addon_path,'default',)
-				myMovieWindow.doModal()
-				del myMovieWindow
-		else:
-			NUMBER_TRAILERS = NUMBER_TRAILERS + 1
-			while NUMBER_TRAILERS > 0:
-				myMovieWindow = trailerWindow('script-trailerwindow.xml', addon_path,'default',)
-				myMovieWindow.doModal()
-				del myMovieWindow
-				if exit_requested:
-					break
-		if not exit_requested:
-			if DO_CURTIANS == 'true':
-				player.play(close_curtain_path)
-				while player.isPlaying():
-					xbmc.sleep(250)
-		exit_requested=True
-			
-def walk(path):
+    global exit_requested
+    global NUMBER_TRAILERS
+    global trailercount
+    exit_requested = False
+    player = XBMCPlayer()
+    DO_CURTIANS = addon.getSetting('do_animation')
+    DO_EXIT = addon.getSetting('do_exit')
+    NUMBER_TRAILERS =  int(addon.getSetting('number_trailers'))
+    if DO_CURTIANS == 'true':
+        player.play(open_curtain_path)
+        while player.isPlaying():
+            xbmc.sleep(250)
+    trailercount = 0
+    while not exit_requested:
+        if NUMBER_TRAILERS == 0:
+            while not exit_requested and not xbmc.abortRequested:
+                myMovieWindow = trailerWindow('script-trailerwindow.xml', addon_path,'default',)
+                myMovieWindow.doModal()
+                del myMovieWindow
+        else:
+            NUMBER_TRAILERS = NUMBER_TRAILERS + 1
+            while NUMBER_TRAILERS > 0:
+                myMovieWindow = trailerWindow('script-trailerwindow.xml', addon_path,'default',)
+                myMovieWindow.doModal()
+                del myMovieWindow
+                if exit_requested:
+                    break
+        if not exit_requested:
+            if DO_CURTIANS == 'true':
+                player.play(close_curtain_path)
+                while player.isPlaying():
+                    xbmc.sleep(250)
+        exit_requested=True
+            
+def getFiles(path):
     trailers = []
     folders = []
     # multipath support
@@ -447,47 +598,53 @@ def walk(path):
             # get all files and subfolders
             dirs,files = xbmcvfs.listdir(folder)
             for item in files:
-				if not os.path.join(folder,item) in played:
-					trailers.append(os.path.join(folder,item))
+                if not os.path.join(folder,item) in played:
+                    trailers.append(os.path.join(folder,item))
             for item in dirs:
                 # recursively scan all subfolders
-                trailers += walk(os.path.join(folder,item))
+                trailers += getFiles(os.path.join(folder,item))
     return trailers
-	
+    
 if xbmc.Player().isPlaying() == False:
-	filtergenre = False
-	if do_path == 'false':
-		if do_genre == 'true':
-			filtergenre = askGenres()
-	
-		success = False
-		if filtergenre:
-			success, selectedGenre = selectGenre()
+    filtergenre = False
+    if trailer_source == 'library':
+        if do_genre == 'true':
+            filtergenre = askGenres()
+    
+        success = False
+        if filtergenre:
+            success, selectedGenre = selectGenre()
 
-		if success:
-			trailers = getTrailers(selectedGenre)
-		else:
-			trailers = getTrailers("")
-
-	bs=blankWindow = blankWindow('script-BlankWindow.xml', addon_path,'default',)
-	bs.show()
-	if do_volume == 'true':
-		muted = xbmc.getCondVisibility("Player.Muted")
-		if not muted and volume == 0:
-			xbmc.executebuiltin('xbmc.Mute()')
-		else:
-			xbmc.executebuiltin('XBMC.SetVolume('+str(volume)+')')	
-	if do_path == 'false':
-		playTrailers()
-	else:
-		playPath()
-	del bs
-	if do_volume == 'true':
-		muted = xbmc.getCondVisibility("Player.Muted")
-		if muted and volume == 0:
-			xbmc.executebuiltin('xbmc.Mute()')
-		else:
-			xbmc.executebuiltin('XBMC.SetVolume('+str(currentVolume)+')')		
+        if success:
+            trailers = getTrailers(selectedGenre)
+        else:
+            trailers = getTrailers("")
+    if trailer_source == 'folder' and path !='':
+        trailers = getFiles()
+    if trailer_source == 'itunes':
+        trailers = getVideos()
+        
+    bs=blankWindow = blankWindow('script-BlankWindow.xml', addon_path,'default',)
+    bs.show()
+    if do_volume == 'true':
+        muted = xbmc.getCondVisibility("Player.Muted")
+        if not muted and volume == 0:
+            xbmc.executebuiltin('xbmc.Mute()')
+        else:
+            xbmc.executebuiltin('XBMC.SetVolume('+str(volume)+')')    
+    if trailer_source == 'library':
+        playTrailers()
+    if trailer_source == 'folder' and path !='':
+        playPath()
+    if trailer_source == 'itunes':
+        playVideo()
+    del bs
+    if do_volume == 'true':
+        muted = xbmc.getCondVisibility("Player.Muted")
+        if muted and volume == 0:
+            xbmc.executebuiltin('xbmc.Mute()')
+        else:
+            xbmc.executebuiltin('XBMC.SetVolume('+str(currentVolume)+')')        
 else:
-	xbmc.log('Exiting Random Trailers Screen Saver Something is playing!!!!!!')
+    xbmc.log('Exiting Random Trailers Screen Saver Something is playing!!!!!!')
 
