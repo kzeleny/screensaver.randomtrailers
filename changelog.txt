@@ -1,3 +1,7 @@
+v.1.1.3 December 28, 2013
+ - added ability to play random trailers form apple itunes
+ - reworked options screens to reflect multiple trailer sources
+ 
 v.1.1.2 December 26, 2013
  - added feature to adjust volume during trailer playback
  
