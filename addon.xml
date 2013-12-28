@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon id="screensaver.randomtrailers"
        name="Random Trailers"
-       version="1.1.2"
+       version="1.1.3"
        provider-name="kzeleny">
   <requires>
     <import addon="xbmc.python"					version="2.1.0"/>
@@ -12,6 +12,7 @@
   <extension point="xbmc.python.script"			library="default.py" />
   <extension point="xbmc.service"				library="service.py" start="login" />
   <extension library="screensaver.py" point="xbmc.ui.screensaver"/>
+  <extension point="xbmc.python.pluginsource" library="plugin.py"/>  
  <provides>executable</provides>
   <extension point="xbmc.addon.metadata">
 	<language></language>
@@ -29,3 +30,4 @@
     <source>https://github.com/kzeleny/screensaver.randomtrailers</source>
   </extension>
 </addon>
+
