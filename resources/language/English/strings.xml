@@ -10,9 +10,17 @@
 	<string id="32006">Adjust Volume During Playback</string>
 	<string id="32007">Force Full Screen</string>
 	<string id="32008">Hide Movie Title</string>
-	<string id="32009">Play Trailers from Folder</string>
+	<string id="32009">Folder Settings</string>
 	<string id="32010">Path to Trailers</string>
-	<string id="32011">Volume</string>
+	<string id="32011">Volume (0-100)</string>
+	<string id="32012">Library Settings</string>
+	<string id="32013">Apple iTunes Settings</string>
+	<string id="32014">Quality</string>
+	<string id="32015">Trailer Source</string>
+	<string id="32016">Common</string>
+	<string id="32017">Source of Trailers</string>
+	<string id="32018">Include Clips</string>
+	<string id="32019">Include Featurettes</string>
 	<string id="32100">Select Genre</string>
 	<string id="32101">Do you want to select a genre to watch?</string>
 </strings>
