@@ -16,7 +16,7 @@
     <setting id="watched_days" type="number" enable="eq(-1,true)" visible="eq(-4,0)" label="32005" default="365" />
     <setting id="hide_info" type="bool" enable="eq(-5,0)" visible="eq(-5,0)" label="32003" default="false" />
     <setting label="32013" enable="eq(-6,1)" visible="eq(-6,1)" type="lsep"/>
-    <setting id="quality" type="enum" enable ="eq(-7,1)" visible="eq(-7,1)" label="32014" values="480p|720p|1080p" default="1"/>
+    <setting id="quality" type="enum" enable ="eq(-7,1)" visible="eq(-7,1)" label="32014" values="480p|720p|1080p" default="0"/>
     <setting id="do_clips" type="bool" enable = "eq(-8,1)" visible="eq(-8,1)" label="32018" default="true" />
     <setting id="do_featurettes" type="bool" enable = "eq(-9,1)" visible="eq(-9,1)" label="32019" default="true" />
     <setting label="32009" enable="eq(-10,2)" visible="eq(-10,2)" type="lsep"/>
