@@ -1,26 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <settings>
-  <category label="32015">
-  <setting label="32017" type="enum" id="trailer_source" values="Library|Apple iTunes|Folder"/> 
-  <setting label="32012" enable="eq(-1,0)" visible="eq(-1,0)" type="lsep"/>
-  <setting id="do_genre" type="bool" enable = "eq(-2,0)" visible="eq(-2,0)" label="32002" default="false" />
-  <setting id="hide_watched" type="bool" enable = "eq(-3,0)" visible="eq(-3,0)" label="32004" default="false" />
-  <setting id="watched_days" type="number" enable="eq(-1,true)" visible="eq(-4,0)" label="32005" default="365" />
-  <setting id="hide_info" type="bool" enable="eq(-5,0)" visible="eq(-5,0)" label="32003" default="false" />
-  <setting label="32013" enable="eq(-6,1)" visible="eq(-6,1)" type="lsep"/>
-  <setting id="quality" type="enum" enable ="eq(-7,1)" visible="eq(-7,1)" label="32014" values="480p|720p|1080p" default="1"/>
-  <setting id="do_clips" type="bool" enable = "eq(-8,1)" visible="eq(-8,1)" label="32018" default="true" />
-  <setting id="do_featurettes" type="bool" enable = "eq(-9,1)" visible="eq(-9,1)" label="32019" default="true" />
-  <setting label="32009" enable="eq(-10,2)" visible="eq(-10,2)" type="lsep"/>
-  <setting id="path" type="folder" enable = "eq(-11,2)" visible="eq(-11,2)" label="32010" default="" />
-  </category>
   <category label="32016">
-  <setting id="number_trailers" type="number" label="32000" default="10" />
-  <setting id="do_animation" type="bool" label="32001" default="true" />
-  <setting id="hide_title" type="bool" label="32008" defalt="false"/>  
-  <setting id="do_volume" type="bool" label="32006" default="false" />
-  <setting id="volume" label="32011" type="number" enable = "eq(-1,true)" default="100" />
-  <setting id="do_fullscreen" type="bool" label="32007" default="false" />
+    <setting id="number_trailers" type="number" label="32000" default="10" />
+    <setting id="do_animation" type="bool" label="32001" default="true" />
+    <setting id="hide_title" type="bool" label="32008" defalt="false"/>  
+    <setting id="do_volume" type="bool" label="32006" default="false" />
+    <setting id="volume" label="32011" type="number" enable = "eq(-1,true)" default="100" />
+    <setting id="do_fullscreen" type="bool" label="32007" default="false" />
+  </category>
+  <category label="32015">
+    <setting label="32017" type="enum" id="trailer_source" values="Library|Apple iTunes|Folder"/> 
+    <setting label="32012" enable="eq(-1,0)" visible="eq(-1,0)" type="lsep"/>
+    <setting id="do_genre" type="bool" enable = "eq(-2,0)" visible="eq(-2,0)" label="32002" default="false" />
+    <setting id="hide_watched" type="bool" enable = "eq(-3,0)" visible="eq(-3,0)" label="32004" default="false" />
+    <setting id="watched_days" type="number" enable="eq(-1,true)" visible="eq(-4,0)" label="32005" default="365" />
+    <setting id="hide_info" type="bool" enable="eq(-5,0)" visible="eq(-5,0)" label="32003" default="false" />
+    <setting label="32013" enable="eq(-6,1)" visible="eq(-6,1)" type="lsep"/>
+    <setting id="quality" type="enum" enable ="eq(-7,1)" visible="eq(-7,1)" label="32014" values="480p|720p|1080p" default="1"/>
+    <setting id="do_clips" type="bool" enable = "eq(-8,1)" visible="eq(-8,1)" label="32018" default="true" />
+    <setting id="do_featurettes" type="bool" enable = "eq(-9,1)" visible="eq(-9,1)" label="32019" default="true" />
+    <setting label="32009" enable="eq(-10,2)" visible="eq(-10,2)" type="lsep"/>
+    <setting id="path" type="folder" enable = "eq(-11,2)" visible="eq(-11,2)" label="32010" default="" />
   </category>
 </settings>
 
