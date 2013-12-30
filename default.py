@@ -1,7 +1,7 @@
 # Random trailer player
 #
 # Author - kzeleny
-# Version - 1.1.3
+# Version - 1.1.4
 # Compatibility - Frodo/Gothum
 #
 
@@ -31,6 +31,7 @@ trailer_source=int(addon.getSetting('trailer_source'))
 if trailer_source==0:trailer_source='library'
 if trailer_source==1:trailer_source='itunes'
 if trailer_source==2:trailer_source='folder'
+if trailer_source==3:trailer_source='multiple'
 xbmc.log('source ='+trailer_source)
 if volume > 100:
     do_volume='false'
@@ -152,6 +153,29 @@ def getTrailers(genre):
     trailers = json.loads(trailerstring)    
     return trailers
 
+def getFiles(path):
+    trailers = []
+    folders = []
+    # multipath support
+    if path.startswith('multipath://'):
+        # get all paths from the multipath
+        paths = path[12:-1].split('/')
+        for item in paths:
+            folders.append(urllib.unquote_plus(item))
+    else:
+        folders.append(path)
+    for folder in folders:
+        if xbmcvfs.exists(xbmc.translatePath(folder)):
+            # get all files and subfolders
+            dirs,files = xbmcvfs.listdir(folder)
+            for item in files:
+                if not os.path.join(folder,item) in played:
+                    trailers.append(os.path.join(folder,item))
+            for item in dirs:
+                # recursively scan all subfolders
+                trailers += getFiles(os.path.join(folder,item))
+    return trailers
+    
 class blankWindow(xbmcgui.WindowXML):
     def onInit(self):
         pass
@@ -581,31 +605,11 @@ def playPath():
                 while player.isPlaying():
                     xbmc.sleep(250)
         exit_requested=True
-            
-def getFiles(path):
-    trailers = []
-    folders = []
-    # multipath support
-    if path.startswith('multipath://'):
-        # get all paths from the multipath
-        paths = path[12:-1].split('/')
-        for item in paths:
-            folders.append(urllib.unquote_plus(item))
-    else:
-        folders.append(path)
-    for folder in folders:
-        if xbmcvfs.exists(xbmc.translatePath(folder)):
-            # get all files and subfolders
-            dirs,files = xbmcvfs.listdir(folder)
-            for item in files:
-                if not os.path.join(folder,item) in played:
-                    trailers.append(os.path.join(folder,item))
-            for item in dirs:
-                # recursively scan all subfolders
-                trailers += getFiles(os.path.join(folder,item))
-    return trailers
+ 
+ 
     
 if xbmc.Player().isPlaying() == False:
+    trailers = []
     filtergenre = False
     if trailer_source == 'library':
         if do_genre == 'true':
@@ -619,10 +623,30 @@ if xbmc.Player().isPlaying() == False:
             trailers = getTrailers(selectedGenre)
         else:
             trailers = getTrailers("")
+            
     if trailer_source == 'folder' and path !='':
-        trailers = getFiles()
+        trailers = getFiles(path)
+        
     if trailer_source == 'itunes':
         trailers = getVideos()
+     
+    if trailer_source =='multiple':
+        if addon.getSetting('do_library')=='true':
+            library_trailers = getTrailers("")
+            library_trailers = library_trailers["result"]["movies"]
+            for trailer in library_trailers:
+                trailers.append([trailer['title'],trailer['trailer']])
+        if addon.getSetting('do_folder')=='true' and path !='':
+            folder_trailers = getFiles(path)
+            for trailer in folder_trailers:
+                title = xbmc.translatePath(trailer)
+                title =os.path.basename(title)
+                title =os.path.splitext(title)[0]   
+                trailers.append([title,trailer])
+        if addon.getSetting('do_itunes')=='true':
+            itunes_trailers = getVideos()
+            for trailer in itunes_trailers:
+                trailers.append([trailer[0],trailer[1]])
         
     bs=blankWindow = blankWindow('script-BlankWindow.xml', addon_path,'default',)
     bs.show()
@@ -636,7 +660,7 @@ if xbmc.Player().isPlaying() == False:
         playTrailers()
     if trailer_source == 'folder' and path !='':
         playPath()
-    if trailer_source == 'itunes':
+    if trailer_source == 'itunes' or trailer_source=='multiple':
         playVideo()
     del bs
     if do_volume == 'true':
