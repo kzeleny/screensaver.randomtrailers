@@ -21,6 +21,11 @@
 	<string id="32017">Source of Trailers</string>
 	<string id="32018">Include Clips</string>
 	<string id="32019">Include Featurettes</string>
+	<string id="32020">Multiple Source Settings (Configure Each First)</string>
+	<string id="32021">Include Trailers From Library</string>
+	<string id="32022">Include Trailers From Folder</string>
+	<string id="32023">Include Trailers From Apple iTunes</string>
 	<string id="32100">Select Genre</string>
 	<string id="32101">Do you want to select a genre to watch?</string>
 </strings>
+
