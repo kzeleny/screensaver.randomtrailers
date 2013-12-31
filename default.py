@@ -732,7 +732,7 @@ if not xbmc.Player().isPlaying():
         if do_itunes == 'true':
             itunes_trailers = getVideos()
             for trailer in itunes_trailers:
-                trailers.append([trailer[0],trailer[1],trailer[2]])
+                trailers.append([trailer[0],trailer[1],trailer[2],trailer[3]])
     else:
         if do_library == 'true':
             if do_genre == 'true':
