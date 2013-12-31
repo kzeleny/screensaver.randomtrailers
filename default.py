@@ -438,7 +438,7 @@ class videoWindow(xbmcgui.WindowXMLDialog):
         xbmc.Player().play(trailer[2])
         xbmc.sleep(250)
         if xbmc.Player().isPlayingVideo():
-            title = trailer[0] + ' - ' + trailer[1] + ' - Rated ' + trailer[7]
+            title = trailer[0] + ' - ' + trailer[1] + ' - ' + trailer[7]
             self.getControl(30011).setVisible(False)
             self.getControl(30011).setLabel(title)
             if hide_title == 'false':
