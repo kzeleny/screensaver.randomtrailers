@@ -1,7 +1,7 @@
 # Random trailer player
 #
 # Author - kzeleny
-# Version - 1.1.5
+# Version - 1.1.6
 # Compatibility - Frodo/Gothum
 #
 
@@ -9,6 +9,7 @@ import xbmc
 import xbmcvfs
 import xbmcgui
 from urllib import quote_plus, unquote_plus
+import datetime
 import urllib
 import urllib2
 import re
@@ -17,7 +18,6 @@ import os
 import random
 import json
 import time
-import datetime
 import xbmcaddon
 
 addon = xbmcaddon.Addon()
@@ -38,18 +38,19 @@ if volume > 100:
     do_volume='false'
 currentVolume = xbmc.getInfoLabel("Player.Volume")
 currentVolume = int((float(currentVolume.split(" ")[0])+60.0)/60.0*100.0)
-g_action = addon.getSetting("g_action") == "true"
-g_comedy = addon.getSetting("g_comedy") == "true"
-g_docu = addon.getSetting("g_docu") == "true"
-g_drama = addon.getSetting("g_drama") == "true"
-g_family = addon.getSetting("g_family") == "true"
-g_fantasy = addon.getSetting("g_fantasy") == "true"
-g_foreign = addon.getSetting("g_foreign") == "true"
-g_horror = addon.getSetting("g_horror") == "true"
-g_musical = addon.getSetting("g_musical") == "true"
-g_romance = addon.getSetting("g_romance") == "true"
-g_scifi = addon.getSetting("g_scifi") == "true"
-g_thriller = addon.getSetting("g_thriller") == "true"
+trailer_type = int(addon.getSetting('trailer_type'))
+g_action = addon.getSetting('g_action') == 'true'
+g_comedy = addon.getSetting('g_comedy') == 'true'
+g_docu = addon.getSetting('g_docu') == 'true'
+g_drama = addon.getSetting('g_drama') == 'true'
+g_family = addon.getSetting('g_family') == 'true'
+g_fantasy = addon.getSetting('g_fantasy') == 'true'
+g_foreign = addon.getSetting('g_foreign') == 'true'
+g_horror = addon.getSetting('g_horror') == 'true'
+g_musical = addon.getSetting('g_musical') == 'true'
+g_romance = addon.getSetting('g_romance') == 'true'
+g_scifi = addon.getSetting('g_scifi') == 'true'
+g_thriller = addon.getSetting('g_thriller') == 'true'
 hide_info = addon.getSetting('hide_info')
 hide_title = addon.getSetting('hide_title')
 trailers_path = addon.getSetting('path')
@@ -188,15 +189,11 @@ def getVideos():
     trailers=[]
     do_clips=addon.getSetting('do_clips')
     do_featurettes=addon.getSetting('do_featurettes')
-    if os.path.exists(cacheFile) and (time.time()-os.path.getmtime(cacheFile) < cacheLifetime*24*60):
-        fh = open(cacheFile, 'r')
-        content = fh.read()
-        fh.close()
-    else:
-        content = opener.open(urlMain+"/trailers/home/feeds/studios.json").read()
-        fh = open(cacheFile, 'w')
-        fh.write(content)
-        fh.close()
+    if trailer_type == 0:content = opener.open(urlMain+"/trailers/home/feeds/studios.json").read()
+    if trailer_type == 1:content = opener.open(urlMain+"/trailers/home/feeds/just_added.json").read()
+    if trailer_type == 2:content = opener.open(urlMain+"/trailers/home/feeds/most_pop.json").read()
+    if trailer_type == 3:content = opener.open(urlMain+"/trailers/home/feeds/exclusive.json").read()
+    if trailer_type == 4:content = opener.open(urlMain+"/trailers/home/feeds/studios.json").read()
     spl = content.split('"title"')
     for i in range(1, len(spl), 1):
         entry = spl[i]
@@ -206,7 +203,25 @@ def getVideos():
         rating = match[0]
         fanart = urlMain+match[0].replace('poster.jpg', 'background.jpg')
         match = re.compile('"releasedate":"(.+?)"', re.DOTALL).findall(entry)
-        year = match[0][12:-15]
+        if len(match)>0:
+            month = match[0][8:-20]
+            day = int(match[0][5:-24])
+            year = int(match[0][12:-15])
+            if month=='Jan':month=1
+            if month=='Feb':month=2
+            if month=='Mar':month=3
+            if month=='Apr':month=4
+            if month=='May':month=5
+            if month=='Jun':month=6
+            if month=='Jul':month=7
+            if month=='Aug':month=8
+            if month=='Sep':month=9
+            if month=='Oct':month=10
+            if month=='Nov':month=11
+            if month=='Dec':month=12
+            releasedate = datetime.date(year,month,day)
+        else:
+            releasedate = datetime.date.today()
         match = re.compile('"(.+?)"', re.DOTALL).findall(entry)
         title = match[0]
         match = re.compile('"genre":(.+?),', re.DOTALL).findall(entry)
@@ -226,8 +241,10 @@ def getVideos():
             if do_featurettes =='false':
                 if 'Featurette' in type:
                     filtered = True
+            if trailer_type==0:
+                if releasedate < datetime.date.today() :filtered = True
             if genreCheck(genre) and checkRating(rating) and not filtered:
-                trailers.append([title,type,url,year,thumb,fanart,genre,rating])
+                trailers.append([title,url,type,rating,year,thumb,fanart,genre])
     return trailers
     
 def getTrailers(genre):
@@ -435,10 +452,10 @@ class videoWindow(xbmcgui.WindowXMLDialog):
             if trailercount == len(trailers):
                 played=[]        
         played.append(trailer)
-        xbmc.Player().play(trailer[2])
+        xbmc.Player().play(trailer[1])
         xbmc.sleep(250)
         if xbmc.Player().isPlayingVideo():
-            title = trailer[0] + ' - ' + trailer[1] + ' - ' + trailer[7]
+            title = trailer[0].encode('utf-8') + ' - ' + trailer[2] + ' - ' + trailer[3]
             self.getControl(30011).setVisible(False)
             self.getControl(30011).setLabel(title)
             if hide_title == 'false':
@@ -703,18 +720,18 @@ if not xbmc.Player().isPlaying():
             library_trailers = getTrailers("")
             library_trailers = library_trailers["result"]["movies"]
             for trailer in library_trailers:
-                trailers.append([trailer['title'],trailer['trailer']])
+                trailers.append([trailer['title'],trailer['trailer'],'Trailer',trailer['mpaa']])
         if do_folder == 'true' and path !='':
             folder_trailers = getFiles(path)
             for trailer in folder_trailers:
                 title = xbmc.translatePath(trailer)
                 title =os.path.basename(title)
                 title =os.path.splitext(title)[0]   
-                trailers.append([title,trailer])
+                trailers.append([title,trailer,'trailer', ''])
         if do_itunes == 'true':
             itunes_trailers = getVideos()
             for trailer in itunes_trailers:
-                trailers.append([trailer[0],trailer[1]])
+                trailers.append([trailer[0],trailer[1],trailer[2]])
     else:
         if do_library == 'true':
             if do_genre == 'true':
@@ -762,3 +779,5 @@ if not xbmc.Player().isPlaying():
 else:
     xbmc.log('Exiting Random Trailers Screen Saver Something is playing!!!!!!')
 
+
+    
