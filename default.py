@@ -194,6 +194,7 @@ def getVideos():
     if trailer_type == 2:content = opener.open(urlMain+"/trailers/home/feeds/most_pop.json").read()
     if trailer_type == 3:content = opener.open(urlMain+"/trailers/home/feeds/exclusive.json").read()
     if trailer_type == 4:content = opener.open(urlMain+"/trailers/home/feeds/studios.json").read()
+    content = content.decode('unicode_escape').encode('ascii','ignore')
     spl = content.split('"title"')
     for i in range(1, len(spl), 1):
         entry = spl[i]
