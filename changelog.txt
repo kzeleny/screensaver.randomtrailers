@@ -1,3 +1,9 @@
+v.1.1.6 (December 31,2013) :
+- added feature to select tyep fo traielrs form iTunes, Coming Soon, Just Added, Most Popular,  Exclusive and All
+
+v.1.1.5 (Decembeor 30,2013) :
+- added feature to filter iTunes trailers. you can filter by selected genre(s), and by rating limit. so only play family movies that are rated G for example.
+
 v.1.1.4 (December 29, 2013) :
  - added ability to play random trailers from multiple sources
  
