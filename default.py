@@ -1,7 +1,7 @@
 # Random trailer player
 #
 # Author - kzeleny
-# Version - 1.1.4
+# Version - 1.1.5
 # Compatibility - Frodo/Gothum
 #
 
@@ -15,7 +15,7 @@ import re
 import sys
 import os
 import random
-import simplejson as json
+import json
 import time
 import datetime
 import xbmcaddon
@@ -27,16 +27,29 @@ do_genre = addon.getSetting('do_genre')
 do_volume = addon.getSetting('do_volume')
 volume = int(addon.getSetting("volume"))
 path = addon.getSetting('path')
-trailer_source=int(addon.getSetting('trailer_source'))
-if trailer_source==0:trailer_source='library'
-if trailer_source==1:trailer_source='itunes'
-if trailer_source==2:trailer_source='folder'
-if trailer_source==3:trailer_source='multiple'
-xbmc.log('source ='+trailer_source)
+do_library=addon.getSetting('do_library')
+do_folder=addon.getSetting('do_folder')
+do_itunes=addon.getSetting('do_itunes')
+do_multiple = False
+if do_library=='true' and (do_folder=='true' or do_itunes=='true'):do_multiple = True
+if do_folder=='true' and (do_library=='true' or do_itunes=='true'):do_multiple = True
+if do_itunes=='true' and (do_folder=='true') or do_library=='true':do_multiple = True
 if volume > 100:
     do_volume='false'
 currentVolume = xbmc.getInfoLabel("Player.Volume")
 currentVolume = int((float(currentVolume.split(" ")[0])+60.0)/60.0*100.0)
+g_action = addon.getSetting("g_action") == "true"
+g_comedy = addon.getSetting("g_comedy") == "true"
+g_docu = addon.getSetting("g_docu") == "true"
+g_drama = addon.getSetting("g_drama") == "true"
+g_family = addon.getSetting("g_family") == "true"
+g_fantasy = addon.getSetting("g_fantasy") == "true"
+g_foreign = addon.getSetting("g_foreign") == "true"
+g_horror = addon.getSetting("g_horror") == "true"
+g_musical = addon.getSetting("g_musical") == "true"
+g_romance = addon.getSetting("g_romance") == "true"
+g_scifi = addon.getSetting("g_scifi") == "true"
+g_thriller = addon.getSetting("g_thriller") == "true"
 hide_info = addon.getSetting('hide_info')
 hide_title = addon.getSetting('hide_title')
 trailers_path = addon.getSetting('path')
@@ -108,10 +121,73 @@ def selectGenre():
   # return the genre and whether the choice was successfult
   return success, selectedGenre
 
+def checkRating(rating):
+    passed = False
+    rating_limit = addon.getSetting('rating_limit')
+    do_notyetrated = addon.getSetting('do_notyetrated')
+    do_nr = addon.getSetting('do_nr')
+    nyr=''
+    nr=''
+    if do_notyetrated=='true':nyr='Not yet rated'
+    if do_nr == 'true':nr='NR'
+    if rating_limit=='0':passed=True
+    if rating_limit=='1':
+        rating_limit=['G',nr,nyr]
+    if rating_limit=='2':
+        rating_limit=['G','PG',nr,nyr]
+    if rating_limit=='3':
+        rating_limit=['G','PG','PG-13',nr,nyr]
+    if rating_limit=='4':
+        rating_limit=['G','PG','PG-13','R',nr,nyr]
+    if rating_limit=='5':
+        rating_limit=['G','PG','PG-13','R','NC-17',nr,nyr]
+    if rating in rating_limit:passed=True
+    return passed
+    
+def genreCheck(genres):
+    passed = True
+    if not g_action:
+        if "Action and Adventure" in genres:
+            passed = False
+    if not g_comedy:
+        if "Comedy" in genres:
+            passed = False
+    if not g_docu:
+        if "Documentary" in genres:
+            passed = False
+    if not g_drama:
+        if "Drama" in genres:
+            passed = False
+    if not g_family:
+        if "Family" in genres:
+            passed = False
+    if not g_fantasy:
+        if "Fantasy" in genres:
+            passed = False
+    if not g_foreign:
+        if "Foreign" in genres:
+            passed = False
+    if not g_horror:
+        if "Horror" in genres:
+            passed = False
+    if not g_musical:
+        if "Musical" in genres:
+            passed = False
+    if not g_romance:
+        if "Romance" in genres:
+            passed = False
+    if not g_scifi:
+        if "Science Fiction" in genres:
+            passed = False
+    if not g_thriller:
+        if "Thriller" in genres:
+            passed = False
+    return passed
+    
 def getVideos():
+    trailers=[]
     do_clips=addon.getSetting('do_clips')
     do_featurettes=addon.getSetting('do_featurettes')
-    entries = []
     if os.path.exists(cacheFile) and (time.time()-os.path.getmtime(cacheFile) < cacheLifetime*24*60):
         fh = open(cacheFile, 'r')
         content = fh.read()
@@ -124,8 +200,17 @@ def getVideos():
     spl = content.split('"title"')
     for i in range(1, len(spl), 1):
         entry = spl[i]
+        match = re.compile('"poster":"(.+?)"', re.DOTALL).findall(entry)
+        thumb = urlMain+match[0].replace('poster.jpg', 'poster-xlarge.jpg')
+        match = re.compile('"rating":"(.+?)"', re.DOTALL).findall(entry)
+        rating = match[0]
+        fanart = urlMain+match[0].replace('poster.jpg', 'background.jpg')
+        match = re.compile('"releasedate":"(.+?)"', re.DOTALL).findall(entry)
+        year = match[0][12:-15]
         match = re.compile('"(.+?)"', re.DOTALL).findall(entry)
         title = match[0]
+        match = re.compile('"genre":(.+?),', re.DOTALL).findall(entry)
+        genre = match[0]
         match = re.compile('"url":"(.+?)","type":"(.+?)"', re.DOTALL).findall(entry)
         for url, type in match:
             urlTemp = urlMain+url+"includes/"+type.replace('-', '').replace(' ', '').lower()+"/large.html"
@@ -141,10 +226,9 @@ def getVideos():
             if do_featurettes =='false':
                 if 'Featurette' in type:
                     filtered = True
-            if not filtered:
-                xbmc.log('Added ' + title+" - "+type)
-                entries.append([title+" - "+type, url])
-    return entries
+            if genreCheck(genre) and checkRating(rating) and not filtered:
+                trailers.append([title,type,url,year,thumb,fanart,genre,rating])
+    return trailers
     
 def getTrailers(genre):
     # get the raw JSON output
@@ -343,16 +427,18 @@ class videoWindow(xbmcgui.WindowXMLDialog):
         global trailercount
         random.shuffle(trailers)
         trailer=random.choice(trailers)
-        while trailer[1] in played:
+        #trailers.append([title,type,url,year,thumb,fanart,genre,rating])
+        
+        while trailer in played:
             trailer=random.choice(trailers)
             trailercount=trailercount+1
             if trailercount == len(trailers):
                 played=[]        
-        played.append(trailer[1])
-        xbmc.Player().play(trailer[1])
+        played.append(trailer)
+        xbmc.Player().play(trailer[2])
         xbmc.sleep(250)
         if xbmc.Player().isPlayingVideo():
-            title = trailer[0]
+            title = trailer[0] + ' - ' + trailer[1]
             self.getControl(30011).setVisible(False)
             self.getControl(30011).setLabel(title)
             if hide_title == 'false':
@@ -608,46 +694,47 @@ def playPath():
  
  
     
-if xbmc.Player().isPlaying() == False:
+if not xbmc.Player().isPlaying():
     trailers = []
     filtergenre = False
-    if trailer_source == 'library':
-        if do_genre == 'true':
-            filtergenre = askGenres()
-    
-        success = False
-        if filtergenre:
-            success, selectedGenre = selectGenre()
-
-        if success:
-            trailers = getTrailers(selectedGenre)
-        else:
-            trailers = getTrailers("")
-            
-    if trailer_source == 'folder' and path !='':
-        trailers = getFiles(path)
-        
-    if trailer_source == 'itunes':
-        trailers = getVideos()
      
-    if trailer_source =='multiple':
-        if addon.getSetting('do_library')=='true':
+    if do_multiple:
+        if do_library == 'true':
             library_trailers = getTrailers("")
             library_trailers = library_trailers["result"]["movies"]
             for trailer in library_trailers:
                 trailers.append([trailer['title'],trailer['trailer']])
-        if addon.getSetting('do_folder')=='true' and path !='':
+        if do_folder == 'true' and path !='':
             folder_trailers = getFiles(path)
             for trailer in folder_trailers:
                 title = xbmc.translatePath(trailer)
                 title =os.path.basename(title)
                 title =os.path.splitext(title)[0]   
                 trailers.append([title,trailer])
-        if addon.getSetting('do_itunes')=='true':
+        if do_itunes == 'true':
             itunes_trailers = getVideos()
             for trailer in itunes_trailers:
                 trailers.append([trailer[0],trailer[1]])
+    else:
+        if do_library == 'true':
+            if do_genre == 'true':
+                filtergenre = askGenres()
         
+            success = False
+            if filtergenre:
+                success, selectedGenre = selectGenre()
+
+            if success:
+                trailers = getTrailers(selectedGenre)
+            else:
+                trailers = getTrailers("")
+                
+        if do_folder == 'true' and path !='':
+            trailers = getFiles(path)
+            
+        if do_itunes == 'true' and not do_multiple:
+            trailers = getVideos()
+    
     bs=blankWindow = blankWindow('script-BlankWindow.xml', addon_path,'default',)
     bs.show()
     if do_volume == 'true':
@@ -655,13 +742,16 @@ if xbmc.Player().isPlaying() == False:
         if not muted and volume == 0:
             xbmc.executebuiltin('xbmc.Mute()')
         else:
-            xbmc.executebuiltin('XBMC.SetVolume('+str(volume)+')')    
-    if trailer_source == 'library':
-        playTrailers()
-    if trailer_source == 'folder' and path !='':
-        playPath()
-    if trailer_source == 'itunes' or trailer_source=='multiple':
+            xbmc.executebuiltin('XBMC.SetVolume('+str(volume)+')')   
+    if do_multiple:
         playVideo()
+    else:
+        if do_library == 'true':
+            playTrailers()
+        if do_folder == 'true' and path !='':
+            playPath()
+        if do_itunes == 'true':
+            playVideo()
     del bs
     if do_volume == 'true':
         muted = xbmc.getCondVisibility("Player.Muted")
