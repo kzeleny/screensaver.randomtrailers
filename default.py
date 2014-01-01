@@ -33,7 +33,7 @@ do_itunes=addon.getSetting('do_itunes')
 do_multiple = False
 if do_library=='true' and (do_folder=='true' or do_itunes=='true'):do_multiple = True
 if do_folder=='true' and (do_library=='true' or do_itunes=='true'):do_multiple = True
-if do_itunes=='true' and (do_folder=='true') or do_library=='true':do_multiple = True
+if do_itunes=='true' and (do_folder=='true' or do_library=='true'):do_multiple = True
 if volume > 100:
     do_volume='false'
 currentVolume = xbmc.getInfoLabel("Player.Volume")
