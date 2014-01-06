@@ -30,7 +30,8 @@ path = addon.getSetting('path')
 do_library=addon.getSetting('do_library')
 do_folder=addon.getSetting('do_folder')
 do_itunes=addon.getSetting('do_itunes')
-
+quality = addon.getSetting("quality")
+quality = ["480p", "720p", "1080p"][int(quality)]
 if volume > 100:
     do_volume='false'
 currentVolume = xbmc.getInfoLabel("Player.Volume")
@@ -282,8 +283,6 @@ def getItunesTrailers():
         type = match[0]
         match = re.compile('"url":"(.+?)","type":"(.+?)"', re.DOTALL).findall(entry)
         for url, type in match:
-            urlTemp = urlMain+url+"includes/"+type.replace('-', '').replace(' ', '').lower()+"/large.html"
-            url = "plugin://screensaver.randomtrailers/?url="+urllib.quote_plus(urlTemp)
             filter = ["- JP Sub","Interview","- UK","- BR Sub","- FR","- IT","- AU","- MX","- MX Sub","- BR","- RU","- DE","- ES","- FR Sub","- KR Sub","- Russian","- French","- Spanish","- German","- Latin American Spanish","- Italian"]
             filtered = False
             for f in filter:
@@ -298,6 +297,7 @@ def getItunesTrailers():
             if trailer_type==0:
                 if releasedate < datetime.date.today() :filtered = True
             if genreCheck(genre) and checkRating(rating) and not filtered:
+                url = urlMain+url+"includes/"+type.replace('-', '').replace(' ', '').lower()+"/large.html"
                 trailer = {'title': title, 'trailer': url, 'type':type, 'mpaa':rating,'year':year,'thumbnail':thumb,'fanart':fanart,'genre':genre,'director':director,'studio':studio,'source':'iTunes'}
                 trailers.append(trailer)
     return trailers
@@ -374,23 +374,31 @@ class trailerWindow(xbmcgui.WindowXMLDialog):
                     lastPlay = True
                 else:
                     lastPlay = False
+        if source == 'iTunes':
+            content = opener.open(trailer['trailer']).read()
+            xbmc.log(content)
+            match = re.compile('<a class="movieLink" href="(.+?)"', re.DOTALL).findall(content)
+            urlTemp = match[0]
+            url = urlTemp[:urlTemp.find("?")].replace("480p", "h"+quality)+"|User-Agent=iTunes/9.1.1"
+        else:
+            url = trailer['trailer']
         if  trailer["trailer"] != '' and lastPlay:
             NUMBER_TRAILERS = NUMBER_TRAILERS -1
             played.append(trailer["trailer"])
             if hide_info == 'false' and source !='folder':
-                if trailer['source'] == 'iTunes':
+                if source == 'iTunes':
                     info = getInfo(trailer['title'],trailer['year'])
                 w=infoWindow('script-DialogVideoInfo.xml',addon_path,'default')
                 do_timeout=True
                 w.doModal()
                 if not exit_requested:
-                    xbmc.Player().play(trailer["trailer"])
+                    xbmc.Player().play(url)
                 do_timeout=False
                 del w
                 if exit_requested:
-                    xbmc.Player().stop()
+                    xbmc.Player().play(url)
             else:
-                xbmc.Player().play(trailer["trailer"])
+                xbmc.Player().play(url)
                 NUMBER_TRAILERS = NUMBER_TRAILERS -1
             if source == 'folder':
                 self.getControl(30011).setLabel(trailer["title"] + ' - ' + trailer['type'])
@@ -618,8 +626,9 @@ def playTrailers():
 if not xbmc.Player().isPlaying():
     trailers = []
     filtergenre = False
-     
+    xbmc.log('Getting Traielrs')
     if do_library == 'true':
+        xbcm.log('Getting Library Trailers')
         if do_genre == 'true':
             filtergenre = askGenres()
         success = False
@@ -634,6 +643,7 @@ if not xbmc.Player().isPlaying():
             trailers.append(trailer) 
                
     if do_folder == 'true' and path !='':
+        xbmc.log('Getting Folder Trailers')
         folder_trailers = getFolderTrailers(path)
         for trailer in folder_trailers:
             title = xbmc.translatePath(trailer)
@@ -643,6 +653,7 @@ if not xbmc.Player().isPlaying():
             trailers.append(dictTrailer)
          
     if do_itunes == 'true':
+        xbmc.log('Getting iTunes Trailers')
         trailers = getItunesTrailers()
     bs = blankWindow('script-BlankWindow.xml', addon_path,'default',)
     bs.show()
