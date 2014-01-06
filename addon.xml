@@ -7,11 +7,11 @@
     <import addon="xbmc.python"					version="2.1.0"/>
     <import addon="xbmc.addon"					version="12.0.0"/>
     <import addon="script.module.simplejson"	version="2.0.10"/>
+    <import addon="script.module.xbmcswift2" version="2.4.0"/>
   </requires>
   <extension point="xbmc.python.script"			library="default.py" />
   <extension point="xbmc.service"				library="service.py" start="login" />
   <extension library="screensaver.py" point="xbmc.ui.screensaver"/>
-  <extension point="xbmc.python.pluginsource" library="plugin.py"/>  
  <provides>executable</provides>
   <extension point="xbmc.addon.metadata">
 	<language></language>
