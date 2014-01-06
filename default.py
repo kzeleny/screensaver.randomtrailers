@@ -627,7 +627,7 @@ if not xbmc.Player().isPlaying():
     filtergenre = False
     xbmc.log('Getting Traielrs')
     if do_library == 'true':
-        xbcm.log('Getting Library Trailers')
+        xbmc.log('Getting Library Trailers')
         if do_genre == 'true':
             filtergenre = askGenres()
         success = False
