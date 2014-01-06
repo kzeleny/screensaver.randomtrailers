@@ -400,9 +400,9 @@ class trailerWindow(xbmcgui.WindowXMLDialog):
                 xbmc.Player().play(url)
                 NUMBER_TRAILERS = NUMBER_TRAILERS -1
             if source == 'folder':
-                self.getControl(30011).setLabel(trailer["title"] + ' - ' + trailer['type'])
+                self.getControl(30011).setLabel(trailer["title"] + ' - ' + trailer['source']+ ' ' + trailer['type'])
             else:
-                self.getControl(30011).setLabel(trailer["title"] + ' - ' + trailer['type'] + ' - ' + str(trailer["year"]))
+                self.getControl(30011).setLabel(trailer["title"] + ' - ' + trailer['source'] + ' ' + trailer['type'] + ' - ' + str(trailer["year"]))
             if hide_title == 'false':
                 self.getControl(30011).setVisible(True)
             else:
@@ -638,22 +638,28 @@ if not xbmc.Player().isPlaying():
         else:
             library_trailers = getLibraryTrailers("")
         library_trailers = getLibraryTrailers("")
+        xbmc.log('Got ' + str(len(library_trailers)) + ' trailers from users movie library')
         for trailer in library_trailers:
             trailers.append(trailer) 
-               
+        xbmc.log('Got ' + str(len(trailers)) + ' trailers')
     if do_folder == 'true' and path !='':
         xbmc.log('Getting Folder Trailers')
         folder_trailers = getFolderTrailers(path)
+        xbmc.log('Got ' + str(len(folder_trailers)) + ' trailers from ' + path)
         for trailer in folder_trailers:
             title = xbmc.translatePath(trailer)
             title =os.path.basename(title)
             title =os.path.splitext(title)[0]   
             dictTrailer={'title':title,'trailer':trailer,'type':'trailer','source':'folder'}
             trailers.append(dictTrailer)
-         
+        xbmc.log('Got ' + str(len(trailers)) + ' trailers')
     if do_itunes == 'true':
         xbmc.log('Getting iTunes Trailers')
-        trailers = getItunesTrailers()
+        iTunes_trailers = getItunesTrailers()
+        xbmc.log('Got ' + str(len(iTunes_trailers)) + ' trailers from Apple iTunes')   
+        for trailer in iTunes_trailers:
+            trailers.append(trailer)
+        xbmc.log('Got ' + str(len(trailers)) + ' trailers')
     bs = blankWindow('script-BlankWindow.xml', addon_path,'default',)
     bs.show()
     if do_volume == 'true':
@@ -672,6 +678,10 @@ if not xbmc.Player().isPlaying():
             xbmc.executebuiltin('XBMC.SetVolume('+str(currentVolume)+')')        
 else:
     xbmc.log('Exiting Random Trailers Screen Saver Something is playing!!!!!!')
+
+
+    
+
 
 
     
