@@ -340,31 +340,49 @@ def getFolderTrailers(path):
     return trailers
 
 def getTmdbTrailers():
+    tmdbTrailers=[]
     if addon.getSetting("tmdb_source") == '0':source='popular'
     if addon.getSetting("tmdb_source") == '1':source='top_rated'
     if addon.getSetting("tmdb_source") == '2':source='upcoming'
     if addon.getSetting("tmdb_source") == '3':source='now_playing'
-    tmdbTrailers=[]
-    page=0
-    for i in range(1,5):
-        page=page+1
+    if addon.getSetting("tmdb_source") == '4':
         data = {}
         data['api_key'] = '99e8b7beac187a857152f57d67495cf4'
-        data['page'] = page
-        data['language']='en'
         url_values = urllib.urlencode(data)
-        url = 'https://api.themoviedb.org/3/movie/' + source
+        url = 'https://api.themoviedb.org/3/movie/latest'
         full_url = url + '?' + url_values
         req = urllib2.Request(full_url)
         infostring = urllib2.urlopen(req).read()
         infostring = json.loads(infostring)
-        for result in infostring['results']:
-            id=result['id']
-            dict={'trailer':'tmdb','id':id}
-            tmdbTrailers.append(dict)
+        maxID=infostring['id']
+        while len(tmdbTrailers) < 100:
+            id=random.randrange(1,maxID)
+            if id not in tmdbTrailers:
+                dict={'trailer':'tmdb','id': id}
+                tmdbTrailers.append(dict)
+    else:
+        page=0
+        for i in range(1,5):
+            page=page+1
+            data = {}
+            data['api_key'] = '99e8b7beac187a857152f57d67495cf4'
+            data['page'] = page
+            data['language']='en'
+            url_values = urllib.urlencode(data)
+            url = 'https://api.themoviedb.org/3/movie/' + source
+            full_url = url + '?' + url_values
+            req = urllib2.Request(full_url)
+            infostring = urllib2.urlopen(req).read()
+            infostring = json.loads(infostring)
+            for result in infostring['results']:
+                id=result['id']
+                dict={'trailer':'tmdb','id':id}
+                tmdbTrailers.append(dict)
     return tmdbTrailers
 
 def getTmdbTrailer(movieId):
+    trailer_url=''
+    type=''
     you_tube_base_url='plugin://plugin.video.youtube/?action=play_video&videoid='
     image_base_url='http://image.tmdb.org/t/p/'
     data = {}
@@ -374,48 +392,50 @@ def getTmdbTrailer(movieId):
     url = 'http://api.themoviedb.org/3/movie/' + str(movieId)
     full_url = url + '?' + url_values
     req = urllib2.Request(full_url)
-    movieString = urllib2.urlopen(req).read()
-    movieString = unicode(movieString, 'utf-8', errors='ignore')
-    movieString = json.loads(movieString)
-    trailer_url=''
-    type=''
-    for trailer in movieString['trailers']['youtube']:
-        if 'source' in trailer:
-            trailer_url=you_tube_base_url + trailer['source']
-            type=trailer['type']
-            break
-    countries = movieString['releases']['countries']
-    mpaa=''
-    for c in countries:
-        if c['iso_3166_1'] =='US':
-            mpaa=c['certification']
-    year=movieString['release_date'][:-6]
-    fanart=image_base_url + 'w300'+str(movieString['backdrop_path'])
-    thumbnail=image_base_url + 'w342'+str(movieString['poster_path'])
-    title=movieString['title']
-    plot=movieString['overview']
-    runtime=movieString['runtime']
-    studios=movieString['production_companies']
-    studio=[]
-    for s in studios:
-        studio.append(s['name'])
-    genres=movieString['genres']
-    genre=[]
-    for g in genres:
-        genre.append(g['name'])
-    castMembers = movieString['credits']['cast']
-    cast=[]
-    for castMember in castMembers:
-        cast.append(castMember['name'])     
-    crewMembers = movieString['credits']['crew']
-    director=[]
-    writer=[]
-    for crewMember in crewMembers:
-        if crewMember['job'] =='Director':
-            director.append(crewMember['name'])
-        if crewMember['department']=='Writing':
-            writer.append(crewMember['name'])
-    dictInfo = {'title':title,'trailer': trailer_url,'year':year,'studio':studio,'mpaa':mpaa,'file':'','thumbnail':thumbnail,'fanart':fanart,'director':director,'writer':writer,'plot':plot,'cast':cast,'runtime':runtime,'genre':genre,'source': 'tmdb','type':type} 
+    try:
+        movieString = urllib2.urlopen(req).read()        
+        movieString = unicode(movieString, 'utf-8', errors='ignore')
+        movieString = json.loads(movieString)
+    except:
+        dictInfo = {'title':'','trailer': '','year':0,'studio':[],'mpaa':'','file':'','thumbnail':'','fanart':'','director':[],'writer':[],'plot':'','cast':'','runtime':0,'genre':[],'source': 'tmdb','type':''} 
+    else:
+        for trailer in movieString['trailers']['youtube']:
+            if 'source' in trailer:
+                trailer_url=you_tube_base_url + trailer['source']
+                type=trailer['type']
+                break
+        countries = movieString['releases']['countries']
+        mpaa=''
+        for c in countries:
+            if c['iso_3166_1'] =='US':
+                mpaa=c['certification']
+        year=movieString['release_date'][:-6]
+        fanart=image_base_url + 'w300'+str(movieString['backdrop_path'])
+        thumbnail=image_base_url + 'w342'+str(movieString['poster_path'])
+        title=movieString['title']
+        plot=movieString['overview']
+        runtime=movieString['runtime']
+        studios=movieString['production_companies']
+        studio=[]
+        for s in studios:
+            studio.append(s['name'])
+        genres=movieString['genres']
+        genre=[]
+        for g in genres:
+            genre.append(g['name'])
+        castMembers = movieString['credits']['cast']
+        cast=[]
+        for castMember in castMembers:
+            cast.append(castMember['name'])     
+        crewMembers = movieString['credits']['crew']
+        director=[]
+        writer=[]
+        for crewMember in crewMembers:
+            if crewMember['job'] =='Director':
+                director.append(crewMember['name'])
+            if crewMember['department']=='Writing':
+                writer.append(crewMember['name'])
+        dictInfo = {'title':title,'trailer': trailer_url,'year':year,'studio':studio,'mpaa':mpaa,'file':'','thumbnail':thumbnail,'fanart':fanart,'director':director,'writer':writer,'plot':plot,'cast':cast,'runtime':runtime,'genre':genre,'source': 'tmdb','type':type} 
     return dictInfo
         
 class blankWindow(xbmcgui.WindowXML):
