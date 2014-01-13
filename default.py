@@ -472,8 +472,31 @@ class trailerWindow(xbmcgui.WindowXMLDialog):
                 played=[]
         played.append(trailer["number"])
         if trailer['trailer']=='tmdb':
-            xbmc.log('Random Trailers Line 457: Getting trailer from tmdb')
-            trailer=getTmdbTrailer(trailer['id'])
+            if addon.getSetting('tmdb_source') == '4':
+                dp=xbmcgui.DialogProgress()
+                dp.create('Random Trailers','Please wait while we get a random trailer from themoviedb...')
+                gotTrailer=False
+                searchCount=0
+                while not gotTrailer:
+                    searchCount=searchCount+1
+                    trailer=getTmdbTrailer(trailer['id'])
+                    if trailer['trailer'] != '':
+                        gotTrailer=True
+                    else:
+                        trailer=random.choice(trailers)
+                        while trailer["number"] in played:
+                            trailer=random.choice(trailers)
+                            trailercount=trailercount+1
+                            if trailercount == len(trailers):
+                                played=[]
+                            played.append(trailer["number"])
+                    dp.update(0,'Please wait while we get a random trailer from themoviedb...','Searched '+ str(searchCount) + ' movies with trailers...')
+                    if dp.iscanceled():
+                        break
+                dp.close()
+                del dp
+            else:
+                trailer=getTmdbTrailer(trailer['id'])
         source=trailer['source']
         lastPlay = True
         if 'lastplayed' in trailer:
@@ -748,7 +771,6 @@ def playTrailers():
                 mytrailerWindow.doModal()
                 del mytrailerWindow
         else:
-            NUMBER_TRAILERS = NUMBER_TRAILERS + 1
             while NUMBER_TRAILERS > 0:
                 xbmc.log('Random Trailers: Getting Next Trailer to play')
                 mytrailerWindow = trailerWindow('script-trailerwindow.xml', addon_path,'default',)
