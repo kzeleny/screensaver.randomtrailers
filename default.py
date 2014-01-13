@@ -355,11 +355,11 @@ def getTmdbTrailers():
         infostring = urllib2.urlopen(req).read()
         infostring = json.loads(infostring)
         maxID=infostring['id']
-        while len(tmdbTrailers) < 100:
-            id=random.randrange(1,maxID)
-            if id not in tmdbTrailers:
-                dict={'trailer':'tmdb','id': id}
-                tmdbTrailers.append(dict)
+        id=0
+        for i in range(1,maxID):
+            id=id+1
+            dict={'trailer':'tmdb','id': id}
+            tmdbTrailers.append(dict)
     else:
         page=0
         for i in range(1,5):
@@ -435,7 +435,10 @@ def getTmdbTrailer(movieId):
                 director.append(crewMember['name'])
             if crewMember['department']=='Writing':
                 writer.append(crewMember['name'])
-        dictInfo = {'title':title,'trailer': trailer_url,'year':year,'studio':studio,'mpaa':mpaa,'file':'','thumbnail':thumbnail,'fanart':fanart,'director':director,'writer':writer,'plot':plot,'cast':cast,'runtime':runtime,'genre':genre,'source': 'tmdb','type':type} 
+        if movieString['adult']=='true':
+            dictInfo = {'title':'','trailer': '','year':0,'studio':[],'mpaa':'','file':'','thumbnail':'','fanart':'','director':[],'writer':[],'plot':'','cast':'','runtime':0,'genre':[],'source': 'tmdb','type':''} 
+        else:
+            dictInfo = {'title':title,'trailer': trailer_url,'year':year,'studio':studio,'mpaa':mpaa,'file':'','thumbnail':thumbnail,'fanart':fanart,'director':director,'writer':writer,'plot':plot,'cast':cast,'runtime':runtime,'genre':genre,'source': 'tmdb','type':type} 
     return dictInfo
         
 class blankWindow(xbmcgui.WindowXML):
@@ -808,7 +811,7 @@ if not xbmc.Player().isPlaying():
         tmdbTrailers=getTmdbTrailers()
         for trailer in tmdbTrailers:
             trailerNumber=trailerNumber+1
-            trailer['number']=trailerNumber
+            trailer['number']=trailerNumber 
             trailers.append(trailer)
     if do_volume == 'true':
         muted = xbmc.getCondVisibility("Player.Muted")
