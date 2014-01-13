@@ -362,7 +362,7 @@ def getTmdbTrailers():
             tmdbTrailers.append(dict)
     else:
         page=0
-        for i in range(1,5):
+        for i in range(0,5):
             page=page+1
             data = {}
             data['api_key'] = '99e8b7beac187a857152f57d67495cf4'
@@ -569,6 +569,7 @@ class trailerWindow(xbmcgui.WindowXMLDialog):
         global movie_file
         global source
         global trailer
+        movie_file=''
 
         if action == ACTION_Q:
             strCouchPotato='plugin://plugin.video.couchpotato_manager/movies/add?title='+trailer['title']
@@ -725,6 +726,8 @@ class infoWindow(xbmcgui.WindowXMLDialog):
         global exit_requested
         global trailer
         global movie_file
+        movie_file=''
+        
         if action == ACTION_PREVIOUS_MENU or action == ACTION_LEFT or action == ACTION_BACK:
             do_timeout=False
             xbmc.Player().stop()
@@ -784,8 +787,8 @@ def playTrailers():
                 while xbmc.Player().isPlaying():
                     xbmc.sleep(250)
         exit_requested=True
-    if not movie_file == '':
-        xbmc.Player().play(movie_file)
+#    if not movie_file == '':
+#       xbmc.Player().play(movie_file)
 
 if not xbmc.Player().isPlaying():
     bs = blankWindow('script-BlankWindow.xml', addon_path,'default',)
@@ -813,7 +816,6 @@ if not xbmc.Player().isPlaying():
             trailers.append(trailer) 
         xbmc.log('Random Trailers: ' + 'Got ' + str(len(trailers)) + ' trailers')
     if do_folder == 'true' and path !='':
-        dp.update(0,'Please Wait While We Get Some Trailers...','Getting Folder Trailers')
         xbmc.log('Random Trailers: ' + 'Getting Folder Trailers')
         folder_trailers = getFolderTrailers(path)
         xbmc.log('Random Trailers: ' + 'Got ' + str(len(folder_trailers)) + ' trailers from ' + path)
@@ -836,10 +838,12 @@ if not xbmc.Player().isPlaying():
         xbmc.log('Random Trailers: ' + 'Got ' + str(len(trailers)) + ' trailers')
     if do_tmdb =='true':
         tmdbTrailers=getTmdbTrailers()
+        xbmc.log('Random Trailers: Got ' + str(len(tmdbTrailers)) + ' trailers from themoviedb.org')        
         for trailer in tmdbTrailers:
             trailerNumber=trailerNumber+1
             trailer['number']=trailerNumber 
             trailers.append(trailer)
+        xbmc.log('Random Trailers: ' + 'Got ' + str(len(trailers)) + ' trailers')
     if do_volume == 'true':
         muted = xbmc.getCondVisibility("Player.Muted")
         if not muted and volume == 0:
