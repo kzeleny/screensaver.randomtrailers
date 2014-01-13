@@ -435,7 +435,12 @@ def getTmdbTrailer(movieId):
                 director.append(crewMember['name'])
             if crewMember['department']=='Writing':
                 writer.append(crewMember['name'])
-        if movieString['adult']=='true':
+        addMovie=False
+        for s in movieString['spoken_languages']:
+            if s['name']=='English':
+                addMovie=True
+        if movieString['adult']=='true':AddMovie = False
+        if not addMovie:
             dictInfo = {'title':'','trailer': '','year':0,'studio':[],'mpaa':'','file':'','thumbnail':'','fanart':'','director':[],'writer':[],'plot':'','cast':'','runtime':0,'genre':[],'source': 'tmdb','type':''} 
         else:
             dictInfo = {'title':title,'trailer': trailer_url,'year':year,'studio':studio,'mpaa':mpaa,'file':'','thumbnail':thumbnail,'fanart':fanart,'director':director,'writer':writer,'plot':plot,'cast':cast,'runtime':runtime,'genre':genre,'source': 'tmdb','type':type} 
