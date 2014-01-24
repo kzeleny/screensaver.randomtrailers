@@ -94,25 +94,26 @@ def selectGenre():
   trailerstring = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetMovies", "params": { "properties": ["genre", "playcount", "file", "trailer"]}, "id": 1}')
   trailerstring = unicode(trailerstring, 'utf-8', errors='ignore')
   trailers = json.loads(trailerstring)
-  for movie in trailers["result"]["movies"]:
-    # Let's get the movie genres
-    genres = movie["genre"]
-    for genre in genres:
-        # check if the genre is a duplicate
-        if not genre in myGenres:
-          # if not, add it to our list
-          myGenres.append(genre)
-  # sort the list alphabeticallt        
-  mySortedGenres = sorted(myGenres)
-  # prompt user to select genre
-  selectGenre = xbmcgui.Dialog().select(addon.getLocalizedString(32100), mySortedGenres)
-  # check whether user cancelled selection
-  if not selectGenre == -1:
-    # get the user's chosen genre
-    selectedGenre = mySortedGenres[selectGenre]
-    success = True
-  else:
-    success = False
+  if 'movies' in trailers:
+      for movie in trailers["result"]["movies"]:
+        # Let's get the movie genres
+        genres = movie["genre"]
+        for genre in genres:
+            # check if the genre is a duplicate
+            if not genre in myGenres:
+              # if not, add it to our list
+              myGenres.append(genre)
+      # sort the list alphabeticallt        
+      mySortedGenres = sorted(myGenres)
+      # prompt user to select genre
+      selectGenre = xbmcgui.Dialog().select(addon.getLocalizedString(32100), mySortedGenres)
+      # check whether user cancelled selection
+      if not selectGenre == -1:
+        # get the user's chosen genre
+        selectedGenre = mySortedGenres[selectGenre]
+        success = True
+      else:
+        success = False
   # return the genre and whether the choice was successfult
   return success, selectedGenre
 
