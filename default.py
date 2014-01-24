@@ -305,15 +305,16 @@ def getItunesTrailers():
     
 def getLibraryTrailers(genre):
     # get the raw JSON output
+    trailers=[]
     trailerstring = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetMovies", "params": {"properties": ["title", "lastplayed", "studio", "cast", "plot", "writer", "director", "fanart", "runtime", "mpaa", "thumbnail", "file", "year", "genre", "trailer"], "filter": {"field": "genre", "operator": "contains", "value": "%s"}}, "id": 1}' % genre)
     trailerstring = unicode(trailerstring, 'utf-8', errors='ignore')
     tmp_trailers = json.loads(trailerstring)  
-    tmp_trailers = tmp_trailers["result"]["movies"]  
-    trailers=[]
-    for trailer in tmp_trailers:
-        trailer['source'] = 'library'
-        trailer['type'] = 'Trailer'
-        trailers.append(trailer)
+    if 'movies' in tmp_trailers:
+        tmp_trailers = tmp_trailers["result"]["movies"]  
+        for trailer in tmp_trailers:
+            trailer['source'] = 'library'
+            trailer['type'] = 'Trailer'
+            trailers.append(trailer)
     return trailers
 
 def getFolderTrailers(path):
