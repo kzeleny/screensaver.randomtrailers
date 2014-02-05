@@ -1,5 +1,5 @@
 v.1.1.9 (February, 05,2014)
-- fixed issue causing crash for not standard ascii characters.
+- fixed issue causing crash for not standard ascii characters. Fix EOL
 
 v.1.1.8 (January, 11, 2014:
 - added ability to play trailers from You Tube. Trailers are located using themoviedb.org.

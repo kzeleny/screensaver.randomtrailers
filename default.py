@@ -779,8 +779,6 @@ def playTrailers():
                 while xbmc.Player().isPlaying():
                     xbmc.sleep(250)
         exit_requested=True
-#    if not movie_file == '':
-#       xbmc.Player().play(movie_file)
 
 if not xbmc.Player().isPlaying():
     bs = blankWindow('script-BlankWindow.xml', addon_path,'default',)
