@@ -1,7 +1,7 @@
 # Random trailer player
 #
 # Author - kzeleny
-# Version - 1.1.8
+# Version - 1.1.9
 # Compatibility - Frodo/Gothum
 #
 
@@ -465,7 +465,6 @@ class trailerWindow(xbmcgui.WindowXMLDialog):
         global source
         random.shuffle(trailers)
         trailercount=0
-        xbmc.log('Random Trailers: Selecting Random Trailer from List')
         trailer=random.choice(trailers)
         while trailer["number"] in played:
             trailer=random.choice(trailers)
@@ -524,21 +523,16 @@ class trailerWindow(xbmcgui.WindowXMLDialog):
             if hide_info == 'false' and source !='folder':
                 if source == 'iTunes':
                     info = getInfo(trailer['title'],trailer['year'])
-                xbmc.log('Random Trailers: Loading infoWindow')
                 w=infoWindow('script-DialogVideoInfo.xml',addon_path,'default')
                 do_timeout=True
                 w.doModal()
                 if not exit_requested:
-                    xbmc.log('Random Trailers: ' + 'Playing ' + trailer['title'] + ' from ' + trailer['source'])
-                    xbmc.log('Random Trailers: Trialer URL = '+ url)
                     xbmc.Player().play(url)
                 do_timeout=False
                 del w
                 if exit_requested:
                     xbmc.Player().play(trailer['file'])
             else:
-                xbmc.log('Random Trailers: ' + 'Playing ' + trailer['title'] + ' from ' + trailer['source'])
-                xbmc.log('Random Trailers: Trialer URL = '+ url)
                 xbmc.Player().play(url)
                 NUMBER_TRAILERS = NUMBER_TRAILERS -1
             if source == 'folder':
@@ -551,7 +545,6 @@ class trailerWindow(xbmcgui.WindowXMLDialog):
                 self.getControl(30011).setVisible(False)
             while xbmc.Player().isPlaying():                
                 xbmc.sleep(250)
-            xbmc.log('Random Trailers: ' + 'Finished Playing ' + trailer['title'] + ' from ' + trailer['source'])
         self.close()
         
     def onAction(self, action):
@@ -723,7 +716,6 @@ class infoWindow(xbmcgui.WindowXMLDialog):
         ACTION_TAB = 18
         ACTION_Q = 34
         
-        xbmc.log('Random Trailers: ' + 'action  =' + str(action.getId()))
         global do_timeout
         global exit_requested
         global trailer
@@ -771,13 +763,11 @@ def playTrailers():
     while not exit_requested:
         if NUMBER_TRAILERS == 0:
             while not exit_requested and not xbmc.abortRequested:
-                xbmc.log('Random Trailers: Getting Next Trailer to play')
                 mytrailerWindow = trailerWindow('script-trailerwindow.xml', addon_path,'default',)
                 mytrailerWindow.doModal()
                 del mytrailerWindow
         else:
             while NUMBER_TRAILERS > 0:
-                xbmc.log('Random Trailers: Getting Next Trailer to play')
                 mytrailerWindow = trailerWindow('script-trailerwindow.xml', addon_path,'default',)
                 mytrailerWindow.doModal()
                 del mytrailerWindow
@@ -798,9 +788,7 @@ if not xbmc.Player().isPlaying():
     trailers = []
     filtergenre = False
     trailerNumber = 0
-    xbmc.log('Random Trailers: ' + 'Getting Traielrs')
     if do_library == 'true':
-        xbmc.log('Random Trailers: ' + 'Getting Library Trailers')
         if do_genre == 'true':
             filtergenre = askGenres()
         success = False
@@ -811,16 +799,12 @@ if not xbmc.Player().isPlaying():
         else:
             library_trailers = getLibraryTrailers("")
         library_trailers = getLibraryTrailers("")
-        xbmc.log('Random Trailers: ' + 'Got ' + str(len(library_trailers)) + ' trailers from users movie library')
         for trailer in library_trailers:
             trailerNumber= trailerNumber+1
             trailer['number']=trailerNumber
             trailers.append(trailer) 
-        xbmc.log('Random Trailers: ' + 'Got ' + str(len(trailers)) + ' trailers')
     if do_folder == 'true' and path !='':
-        xbmc.log('Random Trailers: ' + 'Getting Folder Trailers')
         folder_trailers = getFolderTrailers(path)
-        xbmc.log('Random Trailers: ' + 'Got ' + str(len(folder_trailers)) + ' trailers from ' + path)
         for trailer in folder_trailers:
             trailerNumber=trailerNumber +1
             title = xbmc.translatePath(trailer)
@@ -828,24 +812,18 @@ if not xbmc.Player().isPlaying():
             title =os.path.splitext(title)[0]   
             dictTrailer={'title':title,'trailer':trailer,'type':'trailer','source':'folder','number':trailerNumber}
             trailers.append(dictTrailer)
-        xbmc.log('Random Trailers: ' + 'Got ' + str(len(trailers)) + ' trailers')
     if do_itunes == 'true':
-        xbmc.log('Random Trailers: ' + 'Getting iTunes Trailers')
         iTunes_trailers = getItunesTrailers()
-        xbmc.log('Random Trailers: ' + 'Got ' + str(len(iTunes_trailers)) + ' trailers from Apple iTunes')   
         for trailer in iTunes_trailers:
             trailerNumber=trailerNumber+1
             trailer['number']=trailerNumber
             trailers.append(trailer)
-        xbmc.log('Random Trailers: ' + 'Got ' + str(len(trailers)) + ' trailers')
     if do_tmdb =='true':
         tmdbTrailers=getTmdbTrailers()
-        xbmc.log('Random Trailers: Got ' + str(len(tmdbTrailers)) + ' trailers from themoviedb.org')        
         for trailer in tmdbTrailers:
             trailerNumber=trailerNumber+1
             trailer['number']=trailerNumber 
             trailers.append(trailer)
-        xbmc.log('Random Trailers: ' + 'Got ' + str(len(trailers)) + ' trailers')
     if do_volume == 'true':
         muted = xbmc.getCondVisibility("Player.Muted")
         if not muted and volume == 0:
