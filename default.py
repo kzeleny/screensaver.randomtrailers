@@ -348,7 +348,9 @@ def getTmdbTrailers():
     if addon.getSetting("tmdb_source") == '1':source='top_rated'
     if addon.getSetting("tmdb_source") == '2':source='upcoming'
     if addon.getSetting("tmdb_source") == '3':source='now_playing'
-    if addon.getSetting("tmdb_source") == '4':
+    if addon.getSetting("tmdb_source") == '4':source='dvd'
+    if addon.getSetting("tmdb_source") == '5':source='all'
+    if source=='all':
         data = {}
         data['api_key'] = '99e8b7beac187a857152f57d67495cf4'
         url_values = urllib.urlencode(data)
@@ -363,6 +365,31 @@ def getTmdbTrailers():
             id=id+1
             dict={'trailer':'tmdb','id': id}
             tmdbTrailers.append(dict)
+    elif source=='dvd':
+        data={}
+        data['apikey']='99dgtphe3c29y85m2g8dmdmt'
+        data['country'] = 'us'
+        url_values = urllib.urlencode(data)
+        url = 'http://api.rottentomatoes.com/api/public/v1.0/lists/dvds/new_releases.json'
+        full_url = url + '?' + url_values
+        req = urllib2.Request(full_url)
+        response = urllib2.urlopen(req).read()
+        infostring = json.loads(response)
+        for movie in infostring['movies']:
+            data={}
+            data['api_key']='99e8b7beac187a857152f57d67495cf4'
+            data['query']=movie['title']
+            data['year']=movie['year']
+            url_values = urllib.urlencode(data)
+            url = 'https://api.themoviedb.org/3/search/movie'
+            full_url = url + '?' + url_values
+            req = urllib2.Request(full_url)
+            infostring = urllib2.urlopen(req).read()
+            infostring = json.loads(infostring)
+            for m in infostring['results']:
+                id=m['id']
+                dict={'trailer':'tmdb','id': id}
+                tmdbTrailers.append(dict)
     else:
         page=0
         for i in range(0,5):
@@ -566,7 +593,7 @@ class trailerWindow(xbmcgui.WindowXMLDialog):
         global source
         global trailer
         movie_file=''
-
+        xbmc.log(str(action.getId()))
         if action == ACTION_Q:
             strCouchPotato='plugin://plugin.video.couchpotato_manager/movies/add?title='+trailer['title']
             xbmc.executebuiltin('XBMC.RunPlugin('+strCouchPotato+')')
