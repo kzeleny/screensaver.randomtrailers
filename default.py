@@ -829,7 +829,15 @@ def playTrailers():
                     xbmc.sleep(250)
         exit_requested=True
 
-if not xbmc.Player().isPlaying():
+def check_for_xsqueeze():
+    KEYMAPDESTFILE = os.path.join(xbmc.translatePath('special://userdata/keymaps'), "xsqueeze.xml")
+    if os.path.isfile(KEYMAPDESTFILE):
+        return True
+    else:
+        return False
+
+
+if not xbmc.Player().isPlaying() and not check_for_xsqueeze():
     bs = blankWindow('script-BlankWindow.xml', addon_path,'default',)
     bs.show()
     trailers = []
