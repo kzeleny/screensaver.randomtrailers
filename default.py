@@ -783,6 +783,11 @@ def playTrailers():
     DO_CURTIANS = addon.getSetting('do_animation')
     DO_EXIT = addon.getSetting('do_exit')
     NUMBER_TRAILERS =  int(addon.getSetting('number_trailers'))
+    GROUP_TRAILERS = False
+    if addon.getSetting('group_trailers')=='true':GROUP_TRAILERS = True
+    GROUP_NUMBER = int(addon.getSetting('group_number'))
+    GROUP_COUNT=GROUP_NUMBER
+    GROUP_DELAY = (int(addon.getSetting('group_delay')) * 60) * 1000
     if DO_CURTIANS == 'true':
         xbmc.Player().play(open_curtain_path)
         while xbmc.Player().isPlaying():
@@ -791,14 +796,30 @@ def playTrailers():
     while not exit_requested:
         if NUMBER_TRAILERS == 0:
             while not exit_requested and not xbmc.abortRequested:
+                if GROUP_TRAILERS:
+                    GROUP_COUNT=GROUP_COUNT - 1
                 mytrailerWindow = trailerWindow('script-trailerwindow.xml', addon_path,'default',)
                 mytrailerWindow.doModal()
                 del mytrailerWindow
+                if GROUP_TRAILERS and GROUP_COUNT==0:
+                    GROUP_COUNT=GROUP_NUMBER
+                    i = GROUP_DELAY
+                    while i > 0 and not exit_requested and not xbmc.abortRequested:
+                        xbmc.sleep(500)
+                        i=i-500                      
         else:
             while NUMBER_TRAILERS > 0:
+                if GROUP_TRAILERS:
+                    GROUP_COUNT=GROUP_COUNT - 1
                 mytrailerWindow = trailerWindow('script-trailerwindow.xml', addon_path,'default',)
                 mytrailerWindow.doModal()
                 del mytrailerWindow
+                if GROUP_TRAILERS and GROUP_COUNT==0:
+                    GROUP_COUNT=GROUP_NUMBER
+                    i = GROUP_DELAY
+                    while i > 0 and not exit_requested and not xbmc.abortRequested:
+                        xbmc.sleep(500)
+                        i=i-500  
                 if exit_requested:
                     break
         if not exit_requested:

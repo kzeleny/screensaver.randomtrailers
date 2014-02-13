@@ -1,3 +1,6 @@
+v.1.1.12 (February 12,2014)
+- added feature to play trailers in groups of n with x amount of delay between groups.
+
 v.1.1.11 (February 10,2014)
 - added feature to filter tmdb trailers by New DVD Releases
 
