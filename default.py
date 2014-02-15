@@ -540,10 +540,13 @@ class trailerWindow(xbmcgui.WindowXMLDialog):
                 else:
                     lastPlay = False
         if source == 'iTunes':
-            content = opener.open(trailer['trailer']).read()
-            match = re.compile('<a class="movieLink" href="(.+?)"', re.DOTALL).findall(content)
-            urlTemp = match[0]
-            url = urlTemp[:urlTemp.find("?")].replace("480p", "h"+quality)+"|User-Agent=iTunes/9.1.1"
+            try:
+                content = opener.open(trailer['trailer']).read()
+                match = re.compile('<a class="movieLink" href="(.+?)"', re.DOTALL).findall(content)
+                urlTemp = match[0]
+                url = urlTemp[:urlTemp.find("?")].replace("480p", "h"+quality)+"|User-Agent=iTunes/9.1.1"
+            except:
+                url=''
         else:
             url = trailer['trailer'].encode('ascii', 'ignore')
         if  trailer["trailer"] != '' and lastPlay:
