@@ -558,13 +558,17 @@ class trailerWindow(xbmcgui.WindowXMLDialog):
                 do_timeout=True
                 w.doModal()
                 if not exit_requested:
-                    xbmc.Player().play(url)
+                    vw=videoWindow('script-videoplayer.xml',addon_path,'default')
+                    vw.url=rul
+                    vw.doModal()
                 do_timeout=False
                 del w
                 if exit_requested:
                     xbmc.Player().play(trailer['file'])
             else:
-                xbmc.Player().play(url)
+                vw=videoWindow('script-videoplayer.xml',addon_path,'default')
+                vw.url=rul
+                vw.doModal()
                 NUMBER_TRAILERS = NUMBER_TRAILERS -1
             if source == 'folder':
                 self.getControl(30011).setLabel(trailer["title"] + ' - ' + trailer['source']+ ' ' + trailer['type'])
@@ -775,7 +779,15 @@ class infoWindow(xbmcgui.WindowXMLDialog):
             xbmc.Player().stop()
             exit_requested=True
             self.close()
-                    
+
+class videoWindow(xbmcgui.WindowXMLDialog):
+    url=''
+    def onInit(self):
+        xbmc.Player().play(self.url)
+        while xbmc.Player().isPlaying():
+            xbmc.sleep(250)
+        self.close()
+                            
 def playTrailers():
     global exit_requested
     global movie_file
