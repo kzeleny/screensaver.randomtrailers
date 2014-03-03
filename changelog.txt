@@ -1,3 +1,6 @@
+v.1.1.13 (March 03,2014)
+ - updated filter feature to filter by rating limit for all trailers (perviously only iTunes trailers were filtered)
+
 v.1.1.12 (February 12,2014)
 - added feature to play trailers in groups of n with x amount of delay between groups.
 
