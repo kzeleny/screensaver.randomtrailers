@@ -508,7 +508,10 @@ class trailerWindow(xbmcgui.WindowXMLDialog):
                 searchCount=0
                 while not gotTrailer:
                     searchCount=searchCount+1
-                    trailer=getTmdbTrailer(trailer['id'])
+                    try:
+                        trailer=getTmdbTrailer(trailer['id'])
+                    except:
+                        trailer['trailer']=''
                     if trailer['trailer'] != '':
                         gotTrailer=True
                     else:
