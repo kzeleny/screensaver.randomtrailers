@@ -562,7 +562,7 @@ class trailerWindow(xbmcgui.WindowXMLDialog):
                 w.doModal()
                 if not exit_requested:
                     vw=videoWindow('script-videoplayer.xml',addon_path,'default')
-                    vw.url=rul
+                    vw.url=url
                     vw.doModal()
                 do_timeout=False
                 del w
@@ -570,7 +570,7 @@ class trailerWindow(xbmcgui.WindowXMLDialog):
                     xbmc.Player().play(trailer['file'])
             else:
                 vw=videoWindow('script-videoplayer.xml',addon_path,'default')
-                vw.url=rul
+                vw.url=url
                 vw.doModal()
                 NUMBER_TRAILERS = NUMBER_TRAILERS -1
             if source == 'folder':
