@@ -352,21 +352,39 @@ def getTmdbTrailers():
     if addon.getSetting("tmdb_source") == '3':source='now_playing'
     if addon.getSetting("tmdb_source") == '4':source='dvd'
     if addon.getSetting("tmdb_source") == '5':source='all'
+    rating_limit=addon.getSetting('rating_limit')
+    if rating_limit=='0':rating_limit='NC-17'
+    if rating_limit=='1':rating_limit='G'
+    if rating_limit=='2':'PG'
+    if rating_limit=='3':'PG-13'
+    if rating_limit=='4':'R'
+    if rating_limit=='5':'NC-17'
     if source=='all':
         data = {}
         data['api_key'] = '99e8b7beac187a857152f57d67495cf4'
         url_values = urllib.urlencode(data)
-        url = 'https://api.themoviedb.org/3/movie/latest'
+        url = 'http://api.themoviedb.org/3/discover/movie?api_key=99e8b7beac187a857152f57d67495cf4&sort_by=popularity.desc&certification_country=us&certification.lte=' + rating_limit
         full_url = url + '?' + url_values
         req = urllib2.Request(full_url)
         infostring = urllib2.urlopen(req).read()
         infostring = json.loads(infostring)
-        maxID=infostring['id']
-        id=0
-        for i in range(1,maxID):
-            id=id+1
-            dict={'trailer':'tmdb','id': id}
-            tmdbTrailers.append(dict)
+        total_pages=infostring['total_pages']
+        if total_pages > 1000: total_pages=1000
+        for i in range(1,21):
+            data = {}
+            data['api_key'] = '99e8b7beac187a857152f57d67495cf4'
+            data['page']=random.randrange(1,total_pages+1)
+            url_values = urllib.urlencode(data)
+            url = 'http://api.themoviedb.org/3/discover/movie?api_key=99e8b7beac187a857152f57d67495cf4&sort_by=popularity.desc&certification_country=us&certification.lte' + rating_limit
+            full_url = url + '?' + url_values
+            req = urllib2.Request(full_url)
+            infostring = urllib2.urlopen(req).read()
+            infostring = json.loads(infostring)
+            for movie in infostring['results']:
+                id=movie['id']
+                dict={'trailer':'tmdb','id': id}
+                tmdbTrailers.append(dict)
+
     elif source=='dvd':
         data={}
         data['apikey']='99dgtphe3c29y85m2g8dmdmt'
@@ -411,6 +429,7 @@ def getTmdbTrailers():
                 dict={'trailer':'tmdb','id':id}
                 tmdbTrailers.append(dict)
     return tmdbTrailers
+
 
 def search_tmdb(title,year):
     id=''
