@@ -526,8 +526,8 @@ class blankWindow(xbmcgui.WindowXML):
         
 class    def onInit(self):
         windowstring = xbmc.executeJSONRPC('{"jsonrpc":"2.0","method":"GUI.GetProperties","params":{"properties":["currentwindow"]},"id":1}')
-        windowstring=json.loads(winstring)
-        xbmc.log('Trailer_Window_id = ' + str(winstring['result']['currentwindow']['id']))
+        windowstring=json.loads(windowstring)
+        xbmc.log('Trailer_Window_id = ' + str(windowstring['result']['currentwindow']['id']))
 
         global played
         global SelectedGenre
