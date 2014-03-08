@@ -181,11 +181,12 @@
 					<font>font13</font>
 					<textcolor>FFFFFFFF</textcolor>
 				</control>
-				<control type="textbox" id="30006">
+				<control type="label" id="30006">
 					<description>Cast</description>
 					<posx>330</posx>
 					<posy>285</posy>
 					<width>368</width>
+          <wrapmultiline>true</wrapmultiline>
                     <height>100</height>
 					<font>font13</font>
 					<textcolor>FFb4b4b4</textcolor>
