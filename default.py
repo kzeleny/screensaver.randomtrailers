@@ -706,8 +706,7 @@ class trailerWindow(xbmcgui.WindowXMLDialog):
 class infoWindow(xbmcgui.WindowXMLDialog):
     def onInit(self):
         source = trailer['source']
-        if source == 'iTunes':
-            info=getInfo(trailer['title'],trailer['year'])
+        info=getInfo(trailer['title'],trailer['year'])
         self.getControl(30001).setImage(trailer["thumbnail"])
         self.getControl(30003).setImage(trailer["fanart"])
         title_font=getTitleFont()
