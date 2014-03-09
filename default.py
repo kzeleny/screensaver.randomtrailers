@@ -19,6 +19,8 @@ import random
 import json
 import time
 import xbmcaddon
+import xml.dom.minidom
+from xml.dom.minidom import Node
 
 addon = xbmcaddon.Addon()
 number_trailers =  addon.getSetting('number_trailers')
@@ -74,6 +76,39 @@ trailer=''
 info=''
 do_timeout = False
 played = []
+
+def getTitleFont():
+    title_font='font13'
+    base_size=20
+    multiplier=1
+    skin_dir = xbmc.translatePath("special://skin/")
+    list_dir = os.listdir( skin_dir )
+    fonts=[]
+    fontxml_path =''
+    font_xml=''
+    for item in list_dir:
+        item = os.path.join( skin_dir, item )
+        if os.path.isdir( item ):
+            font_xml = os.path.join( item, "Font.xml" )
+        if os.path.exists( font_xml ):
+            fontxml_path=font_xml
+            break
+    dom =  xml.dom.minidom.parse(fontxml_path)
+    fontlist=dom.getElementsByTagName('font')
+    for font in fontlist:
+        name = font.getElementsByTagName('name')[0].childNodes[0].nodeValue
+        size = font.getElementsByTagName('size')[0].childNodes[0].nodeValue
+        fonts.append({'name':name,'size':float(size)})
+    fonts =sorted(fonts, key=lambda k: k['size'])
+    for f in fonts:
+        if f['name']=='font13':
+            multiplier=f['size'] / 20
+            break
+    for f in fonts:
+        if f['size'] >= 38 * multiplier:
+            title_font=f['name']
+            break
+    return title_font
 
 def askGenres():
     addon = xbmcaddon.Addon()
@@ -373,7 +408,7 @@ def getTmdbTrailers():
         infostring = json.loads(infostring)
         total_pages=infostring['total_pages']
         if total_pages > 1000: total_pages=1000
-        for i in range(1,6):
+        for i in range(1,11):
             data = {}
             data['api_key'] = '99e8b7beac187a857152f57d67495cf4'
             data['sort_by'] ='popularity.desc'
@@ -418,7 +453,7 @@ def getTmdbTrailers():
                 tmdbTrailers.append(dict)
     else:
         page=0
-        for i in range(0,5):
+        for i in range(0,11):
             page=page+1
             data = {}
             data['api_key'] = '99e8b7beac187a857152f57d67495cf4'
@@ -434,6 +469,8 @@ def getTmdbTrailers():
                 id=result['id']
                 dict={'trailer':'tmdb','id': id,'source':'tmdb','title':movie['title']}
                 tmdbTrailers.append(dict)
+            if infostring['total_pages']==page:
+                break
     return tmdbTrailers
 
 def search_tmdb(title,year):
@@ -600,9 +637,9 @@ class trailerWindow(xbmcgui.WindowXMLDialog):
                 xbmc.Player().play(url)
                 NUMBER_TRAILERS = NUMBER_TRAILERS -1
             if source == 'folder':
-                self.getControl(30011).setLabel(trailer["title"] + ' - ' + trailer['source']+ ' ' + trailer['type'])
+                self.getControl(30011).setLabel('[B]'+trailer["title"] + ' - ' + trailer['source']+ ' ' + trailer['type']+'[/B]')
             else:
-                self.getControl(30011).setLabel(trailer["title"] + ' - ' + trailer['source'] + ' ' + trailer['type'] + ' - ' + str(trailer["year"]))
+                self.getControl(30011).setLabel('[B]'+trailer["title"] + ' - ' + trailer['source'] + ' ' + trailer['type'] + ' - ' + str(trailer["year"])+'[/B]')
             if hide_title == 'false':
                 self.getControl(30011).setVisible(True)
             else:
@@ -658,7 +695,9 @@ class trailerWindow(xbmcgui.WindowXMLDialog):
             if source !='folder':
                 self.getControl(30011).setVisible(False)
                 w=infoWindow('script-DialogVideoInfo.xml',addon_path,'default')
+                xbmc.Player().pause()
                 w.doModal()
+                xbmc.Player().pause()
             if hide_title == 'false':
                 self.getControl(30011).setVisible(True)
             else:
@@ -671,7 +710,12 @@ class infoWindow(xbmcgui.WindowXMLDialog):
             info=getInfo(trailer['title'],trailer['year'])
         self.getControl(30001).setImage(trailer["thumbnail"])
         self.getControl(30003).setImage(trailer["fanart"])
-        self.getControl(30002).setLabel(trailer["title"] + ' - ' + trailer['source'] + ' ' + trailer['type'] + ' - ' + str(trailer["year"]))
+        title_font=getTitleFont()
+        title_string =trailer["title"] + ' - ' + trailer['source'] + ' ' + trailer['type'] + ' - ' + str(trailer["year"])
+        title=xbmcgui.ControlLabel(10,40,800,40,title_string,title_font)
+        title=self.addControl(title)
+        title=self.getControl(3001)
+        title.setAnimations([('windowclose', 'effect=fade end=0 time=1000')])          
         movieDirector=''
         movieWriter=''
         if source=='iTunes':
