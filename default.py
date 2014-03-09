@@ -1,7 +1,7 @@
 # Random trailer player
 #
 # Author - kzeleny
-# Version - 1.1.14
+# Version - 1.1.15
 # Compatibility - Frodo/Gothum
 #
 
