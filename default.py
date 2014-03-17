@@ -451,6 +451,7 @@ def getTmdbTrailers():
                 id=m['id']
                 dict={'trailer':'tmdb','id': id,'source':'tmdb','title':movie['title']}
                 tmdbTrailers.append(dict)
+                break
     else:
         page=0
         for i in range(0,11):
