@@ -474,7 +474,7 @@ def getTmdbTrailers():
                 break
     return tmdbTrailers
 
-def search_tmdb(title,year):
+def search_tmdb(query,year):
     id=''
     data = {}
     data['api_key'] = '99e8b7beac187a857152f57d67495cf4'
