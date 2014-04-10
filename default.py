@@ -252,8 +252,11 @@ def getInfo(title,year):
             for g in genres:
                 genre.append(g['name'])
             castMembers = infostring['credits']['cast']
+            castcount=0
             for castMember in castMembers:
+                castcount = castcount + 1
                 cast.append(castMember['name'])     
+                if castcount == 6:break
             crewMembers = infostring['credits']['crew']
             for crewMember in crewMembers:
                 if crewMember['job'] =='Director':
@@ -540,8 +543,11 @@ def getTmdbTrailer(movieId):
             genre.append(g['name'])
         castMembers = movieString['credits']['cast']
         cast=[]
+        castcount=0
         for castMember in castMembers:
-            cast.append(castMember['name'])     
+            castcount=castcount +1
+            cast.append(castMember['name'])
+            if castcount == 6:break     
         crewMembers = movieString['credits']['crew']
         director=[]
         writer=[]
@@ -728,7 +734,7 @@ class infoWindow(xbmcgui.WindowXMLDialog):
             for actor in actors:
                 actorcount=actorcount+1
                 movieActor = movieActor + actor + ", "
-                if actorcount == 8: break
+                if actorcount == 6: break
             if not movieActor == '':
                 movieActor = movieActor[:-2]    
         else:
@@ -742,7 +748,7 @@ class infoWindow(xbmcgui.WindowXMLDialog):
                 for actor in actors:
                     actorcount=actorcount+1
                     movieActor = movieActor + actor['name'] + ", "
-                    if actorcount == 8: break
+                    if actorcount == 6: break
                 if not movieActor == '':
                     movieActor = movieActor[:-2] 
             else:
@@ -751,7 +757,7 @@ class infoWindow(xbmcgui.WindowXMLDialog):
                 for actor in actors:
                     actorcount=actorcount+1
                     movieActor = movieActor + actor + ", "
-                    if actorcount == 8: break
+                    if actorcount == 6: break
                 if not movieActor == '':
                     movieActor = movieActor[:-2]    
         for director in directors:
