@@ -141,6 +141,7 @@
 					<posx>330</posx>
 					<posy>160</posy>
 					<width>368</width>
+          <height>20</height>
 					<font>font13</font>
 					<label>[B]Director[/B]</label>
 					<textcolor>FFFFFFFF</textcolor>
@@ -150,7 +151,8 @@
 					<posx>330</posx>
 					<posy>180</posy>
 					<width>430</width>
-					<scrollsuffix> - </scrollsuffix>
+          <height>20</height>
+          <scrollsuffix> - </scrollsuffix>
 					<font>font13</font>
 					<textcolor>FFb4b4b4</textcolor>
 				</control>
@@ -159,7 +161,8 @@
 					<posx>330</posx>
 					<posy>210</posy>
 					<width>368</width>
-					<font>font13</font>
+          <height>20</height>
+          <font>font13</font>
                     <scroll>true</scroll>
 					<label>[B]Writer[/B]</label>
 					<textcolor>FFFFFFFF</textcolor>
@@ -169,7 +172,8 @@
 					<posx>330</posx>
 					<posy>230</posy>
 					<width>368</width>
-					<scrollsuffix> - </scrollsuffix>
+          <height>20</height>
+          <scrollsuffix> - </scrollsuffix>
 					<font>font13</font>
 					<textcolor>FFb4b4b4</textcolor>
 				</control>			
@@ -178,7 +182,8 @@
 					<posx>330</posx>
 					<posy>265</posy>
 					<width>368</width>
-					<label>[B]Stars[/B]</label>
+          <height>20</height>
+          <label>[B]Stars[/B]</label>
 					<font>font13</font>
 					<textcolor>FFFFFFFF</textcolor>
 				</control>
